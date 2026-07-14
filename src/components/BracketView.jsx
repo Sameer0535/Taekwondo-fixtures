@@ -30,12 +30,23 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
   const dragStart = useRef({ x: 0, y: 0 });
   const containerRef = useRef(null);
 
-  // Reset zoom & pan when division changes
+  // Reset zoom & pan and automatically fit scale to device width (Auto-fit layout on load)
   useEffect(() => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
     setHoveredCompetitorId(null);
-  }, [divisionId]);
+    setPosition({ x: 0, y: 0 });
+    
+    const screenWidth = window.innerWidth;
+    const padding = 48; // container padding margins
+    const availableWidth = screenWidth - padding;
+    
+    if (containerWidth > 0 && availableWidth < containerWidth) {
+      // Scale down to fit the available screen width (down to a minimum scale of 0.4)
+      const fitScale = Math.max(0.4, availableWidth / containerWidth);
+      setScale(fitScale);
+    } else {
+      setScale(0.95); // comfortable default scale on desktop
+    }
+  }, [divisionId, containerWidth]);
 
   // Compute repechage brackets if enabled
   useEffect(() => {
