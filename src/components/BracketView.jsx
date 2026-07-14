@@ -30,6 +30,78 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
   const dragStart = useRef({ x: 0, y: 0 });
   const containerRef = useRef(null);
 
+  // Layout constants — MUST stay in sync with CSS card dimensions
+  // CSS: .match-info-bar height: 24px (box-sizing: border-box)
+  // CSS: .match-competitor height: 38px × 2 rows (box-sizing: border-box)
+  // Total card height: 24 + 38 + 38 = 100px  ✓
+  const CARD_H = 100;
+  const GAP = 14;        // visible gap between adjacent cards
+  const SLOT = CARD_H + GAP;   // 114px per leaf slot
+  const HEADER = 50;     // space for round header above first card
+  const COL_W = 260;     // bracket-round column width
+  const COL_GAP = 64;    // gap between round columns (4rem)
+  const COL_STEP = COL_W + COL_GAP;  // 324px per column step
+  const MARGIN = 48;     // outer margin around the bracket area
+
+  // Sub-element Y offsets — pixel-perfect centers of each section
+  const INFO_BAR_H = 24;                             // 24px info bar
+  const ROW_H = 38;                                  // 38px per competitor row
+  const CARD_MID = CARD_H / 2;                       // 50 — center of whole card
+  const BLUE_SLOT_MID = INFO_BAR_H + ROW_H / 2;     // 43 — center of blue row
+  const RED_SLOT_MID = INFO_BAR_H + ROW_H + ROW_H / 2; // 81 — center of red row
+
+  // Dynamic tree positioning layout logic — Forward (leaves → root) approach
+  // This guarantees no card overlaps by spacing leaf cards first, then centering parents.
+  const { processedRounds, columnHeight, containerWidth } = useMemo(() => {
+    if (!rounds || rounds.length === 0) return { processedRounds: [], columnHeight: 400, containerWidth: 400 };
+    
+    const cloned = JSON.parse(JSON.stringify(rounds));
+    // Fail-safe: dynamically assign match numbers so old loaded storage brackets also have them
+    assignActiveMatchNumbers(cloned);
+    const totalRounds = cloned.length;
+    
+    // 1. Position Round 0 (leaf) matches evenly from the top
+    for (let m = 0; m < cloned[0].length; m++) {
+      cloned[0][m].y = MARGIN + HEADER + m * SLOT;
+    }
+    
+    // 2. Each subsequent round: center between its two children
+    for (let r = 1; r < totalRounds; r++) {
+      for (let m = 0; m < cloned[r].length; m++) {
+        const topChild = cloned[r - 1][m * 2];
+        const botChild = cloned[r - 1][m * 2 + 1];
+        
+        if (!topChild || !botChild) {
+          cloned[r][m].y = MARGIN + HEADER;
+          continue;
+        }
+        
+        const topActive = topChild.status !== 'walkover';
+        const botActive = botChild.status !== 'walkover';
+        
+        if (topActive && botActive) {
+          // Both children are real matches — center parent between them
+          cloned[r][m].y = (topChild.y + botChild.y) / 2;
+        } else if (topActive && !botActive) {
+          // Only top child feeds — align parent with top child
+          cloned[r][m].y = topChild.y;
+        } else if (!topActive && botActive) {
+          // Only bottom child feeds — align parent with bottom child
+          cloned[r][m].y = botChild.y;
+        } else {
+          // Both are walkovers — center anyway
+          cloned[r][m].y = (topChild.y + botChild.y) / 2;
+        }
+      }
+    }
+    
+    // Container dimensions include margins on all sides - tighter padding for printing
+    const colHeight = Math.max(480, MARGIN + HEADER + (cloned[0].length - 1) * SLOT + CARD_H + MARGIN);
+    const contWidth = MARGIN + totalRounds * COL_W + (totalRounds - 1) * COL_GAP + MARGIN;
+    
+    return { processedRounds: cloned, columnHeight: colHeight, containerWidth: contWidth };
+  }, [rounds]);
+
   // Reset zoom & pan and automatically fit scale to device width (Auto-fit layout on load)
   useEffect(() => {
     setHoveredCompetitorId(null);
@@ -275,77 +347,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
 
   const podium = getPodium();
 
-  // Layout constants — MUST stay in sync with CSS card dimensions
-  // CSS: .match-info-bar height: 24px (box-sizing: border-box)
-  // CSS: .match-competitor height: 38px × 2 rows (box-sizing: border-box)
-  // Total card height: 24 + 38 + 38 = 100px  ✓
-  const CARD_H = 100;
-  const GAP = 14;        // visible gap between adjacent cards
-  const SLOT = CARD_H + GAP;   // 114px per leaf slot
-  const HEADER = 50;     // space for round header above first card
-  const COL_W = 260;     // bracket-round column width
-  const COL_GAP = 64;    // gap between round columns (4rem)
-  const COL_STEP = COL_W + COL_GAP;  // 324px per column step
-  const MARGIN = 48;     // outer margin around the bracket area
 
-  // Sub-element Y offsets — pixel-perfect centers of each section
-  const INFO_BAR_H = 24;                             // 24px info bar
-  const ROW_H = 38;                                  // 38px per competitor row
-  const CARD_MID = CARD_H / 2;                       // 50 — center of whole card
-  const BLUE_SLOT_MID = INFO_BAR_H + ROW_H / 2;     // 43 — center of blue row
-  const RED_SLOT_MID = INFO_BAR_H + ROW_H + ROW_H / 2; // 81 — center of red row
-
-  // Dynamic tree positioning layout logic — Forward (leaves → root) approach
-  // This guarantees no card overlaps by spacing leaf cards first, then centering parents.
-  const { processedRounds, columnHeight, containerWidth } = useMemo(() => {
-    if (!rounds || rounds.length === 0) return { processedRounds: [], columnHeight: 400, containerWidth: 400 };
-    
-    const cloned = JSON.parse(JSON.stringify(rounds));
-    // Fail-safe: dynamically assign match numbers so old loaded storage brackets also have them
-    assignActiveMatchNumbers(cloned);
-    const totalRounds = cloned.length;
-    
-    // 1. Position Round 0 (leaf) matches evenly from the top
-    for (let m = 0; m < cloned[0].length; m++) {
-      cloned[0][m].y = MARGIN + HEADER + m * SLOT;
-    }
-    
-    // 2. Each subsequent round: center between its two children
-    for (let r = 1; r < totalRounds; r++) {
-      for (let m = 0; m < cloned[r].length; m++) {
-        const topChild = cloned[r - 1][m * 2];
-        const botChild = cloned[r - 1][m * 2 + 1];
-        
-        if (!topChild || !botChild) {
-          cloned[r][m].y = MARGIN + HEADER;
-          continue;
-        }
-        
-        const topActive = topChild.status !== 'walkover';
-        const botActive = botChild.status !== 'walkover';
-        
-        if (topActive && botActive) {
-          // Both children are real matches — center parent between them
-          cloned[r][m].y = (topChild.y + botChild.y) / 2;
-        } else if (topActive && !botActive) {
-          // Only top child feeds — align parent with top child
-          cloned[r][m].y = topChild.y;
-        } else if (!topActive && botActive) {
-          // Only bottom child feeds — align parent with bottom child
-          cloned[r][m].y = botChild.y;
-        } else {
-          // Both are walkovers — center anyway
-          cloned[r][m].y = (topChild.y + botChild.y) / 2;
-        }
-      }
-    }
-    
-    // Container dimensions include margins on all sides - tighter padding for printing
-    const colHeight = Math.max(480, MARGIN + HEADER + (cloned[0].length - 1) * SLOT + CARD_H + MARGIN);
-    const contWidth = MARGIN + totalRounds * COL_W + (totalRounds - 1) * COL_GAP + MARGIN;
-    
-    return { processedRounds: cloned, columnHeight: colHeight, containerWidth: contWidth };
-  }, [rounds]);
 
   // Collect and generate curved & straight connection lines
   // SVG coordinates use the SAME absolute coordinate space as the card positions.
