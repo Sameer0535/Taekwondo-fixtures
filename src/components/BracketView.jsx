@@ -80,6 +80,29 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
     setIsDragging(false);
   };
 
+  // Touch Drag Handlers for Mobile & Tablet Support
+  const handleTouchStart = (e) => {
+    if (e.target.closest('.btn') || e.target.closest('.match-card') || e.target.closest('select')) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    setIsDragging(true);
+    dragStart.current = { x: touch.clientX - position.x, y: touch.clientY - position.y };
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    setPosition({
+      x: touch.clientX - dragStart.current.x,
+      y: touch.clientY - dragStart.current.y
+    });
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
   const handleWheel = (e) => {
     // Only zoom when Ctrl key is held down to prevent annoying scroll interception
     if (e.ctrlKey) {
@@ -367,7 +390,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
 
   return (
     <div>
-      <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
+      <div className="no-print bracket-header">
         <h4 style={{ color: 'var(--text-muted)' }}>{divisionName} Bracket</h4>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className="btn btn-secondary btn-sm" onClick={() => handleZoom(1.15)}>Zoom +</button>
@@ -385,6 +408,9 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onWheel={handleWheel}
       >
         <div 
