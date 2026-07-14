@@ -178,6 +178,11 @@ body {
   .dashboard-grid {
     grid-template-columns: 350px 1fr;
   }
+  .dashboard-grid > div:first-child {
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+  }
 }
 
 .card {
