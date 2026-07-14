@@ -291,7 +291,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
                   userSelect: 'none'
                 }}
               >
-                <span>{selectedLabel}</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '4px', flex: 1, textAlign: 'left' }}>{selectedLabel}</span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>▼</span>
               </div>
 
@@ -456,7 +456,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
           <input 
             type="text" 
             className="form-control"
-            style={{ width: '250px', fontSize: '0.85rem' }}
+            style={{ minWidth: '140px', flex: 1, maxWidth: '250px', fontSize: '0.85rem' }}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search competitor, club..."
