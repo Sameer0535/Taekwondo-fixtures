@@ -257,7 +257,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
               className="form-control" 
               value={name} 
               onChange={e => setName(e.target.value)} 
-              placeholder="e.g. Lee Dae-hoon" 
+              placeholder="Participant Name" 
               required
             />
           </div>
@@ -270,7 +270,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
                 className="form-control" 
                 value={club} 
                 onChange={e => setClub(e.target.value)} 
-                placeholder="e.g. Seoul TKD" 
+                placeholder="Academy Name" 
               />
             </div>
             <div className="form-group" ref={dropdownRef} style={{ position: 'relative' }}>

@@ -592,51 +592,52 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
               })}
             </div>
           ))}
-          {/* Standings block inside bracket-container (zooms and pans with the rest of the bracket) */}
-          {podium && (
-            <div className="standings-box standings-interactive no-print" style={{ 
-              position: 'absolute',
-              bottom: `${MARGIN}px`,
-              right: `${MARGIN}px`,
-              width: '260px', 
-              border: '1px solid var(--border-color)', 
-              borderRadius: '6px', 
-              backgroundColor: 'white',
-              overflow: 'hidden',
-              boxShadow: 'var(--shadow-sm)',
-              zIndex: 10
-            }}>
-              <table className="custom-table" style={{ fontSize: '0.8rem' }}>
-                <tbody>
-                  <tr>
-                    <td style={{ width: '45px', fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>1st</td>
-                    <td style={{ padding: '0.4rem 0.75rem', fontWeight: podium.first ? 'bold' : 'normal' }}>
-                      {podium.first?.name || ''}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>2nd</td>
-                    <td style={{ padding: '0.4rem 0.75rem' }}>
-                      {podium.second?.name || ''}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                    <td style={{ padding: '0.4rem 0.75rem' }}>
-                      {podium.bronze1?.name || ''}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                    <td style={{ padding: '0.4rem 0.75rem' }}>
-                      {podium.bronze2?.name || ''}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
+
+        {/* Floating Standings block (stays fixed in the bottom-right corner of the scroll viewport window, unaffected by pan/zoom) */}
+        {podium && (
+          <div className="standings-box standings-interactive no-print" style={{ 
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            width: '260px', 
+            border: '1px solid var(--border-color)', 
+            borderRadius: '6px', 
+            backgroundColor: 'white',
+            overflow: 'hidden',
+            boxShadow: 'var(--shadow-md)',
+            zIndex: 10
+          }}>
+            <table className="custom-table" style={{ fontSize: '0.8rem' }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: '45px', fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>1st</td>
+                  <td style={{ padding: '0.4rem 0.75rem', fontWeight: podium.first ? 'bold' : 'normal' }}>
+                    {podium.first?.name || ''}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>2nd</td>
+                  <td style={{ padding: '0.4rem 0.75rem' }}>
+                    {podium.second?.name || ''}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
+                  <td style={{ padding: '0.4rem 0.75rem' }}>
+                    {podium.bronze1?.name || ''}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
+                  <td style={{ padding: '0.4rem 0.75rem' }}>
+                    {podium.bronze2?.name || ''}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Duplicate copy for print layout - rendered outside zoomed bracket-container so it can escape container bounds and use position: fixed relative to paper boundary */}
         {podium && (
