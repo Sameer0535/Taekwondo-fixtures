@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import MatchModal from './MatchModal';
-import { updateMatchScore, buildRepechageBrackets, assignActiveMatchNumbers } from '../utils/bracketBuilder';
+import { updateMatchScore, assignActiveMatchNumbers } from '../utils/bracketBuilder';
 import { nocToIso } from '../utils/countries';
 
 // Helper to draw a perfect step path with rounded corners
@@ -15,9 +15,8 @@ const getStepPath = (x1, y1, x2, y2) => {
   return `M ${x1} ${y1} H ${xmid - r} Q ${xmid} ${y1}, ${xmid} ${y1 + dy} V ${y2 - dy} Q ${xmid} ${y2}, ${xmid + r} ${y2} H ${x2}`;
 };
 
-function BracketView({ divisionId, divisionName, rounds, brackets, setBrackets, useRepechage }) {
+function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [selectedRepMatch, setSelectedRepMatch] = useState(null);
 
   // Hover Path Tracking State
   const [hoveredCompetitorId, setHoveredCompetitorId] = useState(null);
@@ -28,21 +27,6 @@ function BracketView({ divisionId, divisionName, rounds, brackets, setBrackets, 
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const containerRef = useRef(null);
-
-  // Compute repechage brackets if enabled
-  const repechageBrackets = useMemo(() => {
-    if (!useRepechage || !rounds) return null;
-    
-    const finalRound = rounds[rounds.length - 1];
-    const finalMatch = finalRound?.[0];
-    if (finalMatch?.status !== 'completed') return null;
-
-    if (brackets[divisionId + "_repechage"]) {
-      return brackets[divisionId + "_repechage"];
-    }
-
-    return buildRepechageBrackets(rounds);
-  }, [brackets, divisionId, rounds, useRepechage]);
 
   // Layout constants — MUST stay in sync with CSS card dimensions
   // CSS: .match-info-bar height: 24px (box-sizing: border-box)
@@ -204,68 +188,13 @@ function BracketView({ divisionId, divisionName, rounds, brackets, setBrackets, 
     setBrackets(prev => {
       const currentRounds = prev[divisionId];
       const updated = updateMatchScore(currentRounds, selectedMatch.id, winnerId, score1, score2, winType);
-      
-      // Check if the final match has been completed
-      const finalRound = updated[updated.length - 1];
-      const finalMatchObj = finalRound?.[0];
-      
-      const newBracketsState = {
+      return {
         ...prev,
         [divisionId]: updated
       };
-      
-      if (finalMatchObj?.status === 'completed' && useRepechage) {
-        // Seed the repechage bracket if it doesn't exist
-        if (!newBracketsState[divisionId + "_repechage"]) {
-          newBracketsState[divisionId + "_repechage"] = buildRepechageBrackets(updated);
-        }
-      } else {
-        // If final is not complete, clear any old repechage brackets
-        delete newBracketsState[divisionId + "_repechage"];
-      }
-
-      return newBracketsState;
     });
     
     setSelectedMatch(null);
-  };
-
-  // Update score in repechage bracket
-  const handleSaveRepScore = (winnerId, score1, score2, winType) => {
-    if (!selectedRepMatch || !repechageBrackets) return;
-
-    const { side, matchId } = selectedRepMatch;
-    const targetBracketKey = side === 'A' ? 'bracketA' : 'bracketB';
-    const targetBracket = [...repechageBrackets[targetBracketKey]];
-    const matchIdx = targetBracket.findIndex(m => m.id === matchId);
-
-    if (matchIdx === -1) return;
-
-    // Update match
-    const match = targetBracket[matchIdx];
-    match.winnerId = winnerId;
-    match.score1 = score1;
-    match.score2 = score2;
-    match.winType = winType;
-    match.status = 'completed';
-
-    const winnerObj = winnerId === match.p1.id ? match.p1 : match.p2;
-
-    // Propagate if there's a next match in repechage
-    if (matchIdx < targetBracket.length - 1) {
-      const nextMatch = targetBracket[matchIdx + 1];
-      nextMatch.p1 = { ...winnerObj };
-    }
-
-    setBrackets(prev => ({
-      ...prev,
-      [divisionId + "_repechage"]: {
-        ...repechageBrackets,
-        [targetBracketKey]: targetBracket
-      }
-    }));
-
-    setSelectedRepMatch(null);
   };
 
   // Get names of rounds (matching the screenshot style)
@@ -313,26 +242,21 @@ function BracketView({ divisionId, divisionName, rounds, brackets, setBrackets, 
     let bronze1 = null;
     let bronze2 = null;
 
-    if (useRepechage && repechageBrackets) {
-      const repAFinal = repechageBrackets.bracketA?.[repechageBrackets.bracketA.length - 1];
-      const repBFinal = repechageBrackets.bracketB?.[repechageBrackets.bracketB.length - 1];
+    const semiRound = rounds[rounds.length - 2];
+    if (semiRound) {
+      const m1 = semiRound[0];
+      const m2 = semiRound[1];
       
-      if (repAFinal?.winnerId) {
-        bronze1 = repAFinal.winnerId === repAFinal.p1?.id ? repAFinal.p1 : repAFinal.p2;
-      }
-      if (repBFinal?.winnerId) {
-        bronze2 = repBFinal.winnerId === repBFinal.p1?.id ? repBFinal.p1 : repBFinal.p2;
-      }
-    } else {
-      const semiRound = rounds[rounds.length - 2];
-      if (semiRound) {
-        const m1 = semiRound[0];
-        const m2 = semiRound[1];
-        if (m1?.status === 'completed' && m1.winnerId) {
-          bronze1 = m1.winnerId === m1.p1?.id ? m1.p2 : m1.p1;
+      if (m1 && m1.winnerId) {
+        const loser = m1.winnerId === m1.p1?.id ? m1.p2 : m1.p1;
+        if (loser && loser.name) {
+          bronze1 = loser;
         }
-        if (m2?.status === 'completed' && m2.winnerId) {
-          bronze2 = m2.winnerId === m2.p1?.id ? m2.p2 : m2.p1;
+      }
+      if (m2 && m2.winnerId) {
+        const loser = m2.winnerId === m2.p1?.id ? m2.p2 : m2.p1;
+        if (loser && loser.name) {
+          bronze2 = loser;
         }
       }
     }
@@ -644,18 +568,22 @@ function BracketView({ divisionId, divisionName, rounds, brackets, setBrackets, 
                     {podium.second?.name || ''}
                   </td>
                 </tr>
-                <tr>
-                  <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                  <td style={{ padding: '0.4rem 0.75rem' }}>
-                    {podium.bronze1?.name || ''}
-                  </td>
-                </tr>
-                <tr>
-                  <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                  <td style={{ padding: '0.4rem 0.75rem' }}>
-                    {podium.bronze2?.name || ''}
-                  </td>
-                </tr>
+                {podium.bronze1 && (
+                  <tr>
+                    <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
+                    <td style={{ padding: '0.4rem 0.75rem' }}>
+                      {podium.bronze1.name}
+                    </td>
+                  </tr>
+                )}
+                {podium.bronze2 && (
+                  <tr>
+                    <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
+                    <td style={{ padding: '0.4rem 0.75rem' }}>
+                      {podium.bronze2.name}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -685,142 +613,27 @@ function BracketView({ divisionId, divisionName, rounds, brackets, setBrackets, 
                     {podium.second?.name || ''}
                   </td>
                 </tr>
-                <tr>
-                  <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                  <td style={{ padding: '0.4rem 0.75rem' }}>
-                    {podium.bronze1?.name || ''}
-                  </td>
-                </tr>
-                <tr>
-                  <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                  <td style={{ padding: '0.4rem 0.75rem' }}>
-                    {podium.bronze2?.name || ''}
-                  </td>
-                </tr>
+                {podium.bronze1 && (
+                  <tr>
+                    <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
+                    <td style={{ padding: '0.4rem 0.75rem' }}>
+                      {podium.bronze1.name}
+                    </td>
+                  </tr>
+                )}
+                {podium.bronze2 && (
+                  <tr>
+                    <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
+                    <td style={{ padding: '0.4rem 0.75rem' }}>
+                      {podium.bronze2.name}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         )}
       </div>
-
-      {/* Repechage Brackets */}
-      {useRepechage && repechageBrackets && (
-        <div style={{ marginTop: '3rem' }}>
-          <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-            Olympic Double Bronze Repechage
-          </h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-            {/* Repechage A */}
-            <div className="card">
-              <h4 style={{ color: 'var(--blue-comp)', marginBottom: '1rem' }}>Repechage Bracket A (Finalist A Opponents)</h4>
-              {repechageBrackets.bracketA.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No competitors in Repechage A yet.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {repechageBrackets.bracketA.map((match) => {
-                    const hasHoveredComp = hoveredCompetitorId && (
-                      match.p1?.id === hoveredCompetitorId || 
-                      match.p2?.id === hoveredCompetitorId
-                    );
-                    
-                    return (
-                      <div 
-                        key={match.id} 
-                        className={`match-card ${hasHoveredComp ? 'path-highlighted' : ''}`}
-                        onClick={() => setSelectedRepMatch({ side: 'A', matchId: match.id, match })}
-                      >
-                        <div className="match-info-bar">
-                          <span>{match.title}</span>
-                          {match.status === 'completed' && <span className="badge badge-blue">{match.winType}</span>}
-                        </div>
-                        
-                        <div 
-                          className={getCompetitorClass(match, match.p1, 'blue')}
-                          onMouseEnter={() => match.p1 && setHoveredCompetitorId(match.p1.id)}
-                          onMouseLeave={() => setHoveredCompetitorId(null)}
-                        >
-                          <div className="comp-bar blue-bar"></div>
-                          <div style={{ flex: 1, paddingLeft: '0.75rem' }}>
-                            <div className="comp-name-line">{match.p1.name}</div>
-                          </div>
-                          {match.status === 'completed' && <span className="match-score blue-score">{match.score1}</span>}
-                        </div>
-
-                        <div 
-                          className={getCompetitorClass(match, match.p2, 'red')}
-                          onMouseEnter={() => match.p2 && setHoveredCompetitorId(match.p2.id)}
-                          onMouseLeave={() => setHoveredCompetitorId(null)}
-                        >
-                          <div className="comp-bar red-bar"></div>
-                          <div style={{ flex: 1, paddingLeft: '0.75rem' }}>
-                            <div className="comp-name-line">{match.p2 ? match.p2.name : 'TBD'}</div>
-                          </div>
-                          {match.status === 'completed' && match.p2 && <span className="match-score red-score">{match.score2}</span>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Repechage B */}
-            <div className="card">
-              <h4 style={{ color: 'var(--red-comp)', marginBottom: '1rem' }}>Repechage Bracket B (Finalist B Opponents)</h4>
-              {repechageBrackets.bracketB.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No competitors in Repechage B yet.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {repechageBrackets.bracketB.map((match) => {
-                    const hasHoveredComp = hoveredCompetitorId && (
-                      match.p1?.id === hoveredCompetitorId || 
-                      match.p2?.id === hoveredCompetitorId
-                    );
-                    
-                    return (
-                      <div 
-                        key={match.id} 
-                        className={`match-card ${hasHoveredComp ? 'path-highlighted' : ''}`}
-                        onClick={() => setSelectedRepMatch({ side: 'B', matchId: match.id, match })}
-                      >
-                        <div className="match-info-bar">
-                          <span>{match.title}</span>
-                          {match.status === 'completed' && <span className="badge badge-blue">{match.winType}</span>}
-                        </div>
-                        
-                        <div 
-                          className={getCompetitorClass(match, match.p1, 'blue')}
-                          onMouseEnter={() => match.p1 && setHoveredCompetitorId(match.p1.id)}
-                          onMouseLeave={() => setHoveredCompetitorId(null)}
-                        >
-                          <div className="comp-bar blue-bar"></div>
-                          <div style={{ flex: 1, paddingLeft: '0.75rem' }}>
-                            <div className="comp-name-line">{match.p1.name}</div>
-                          </div>
-                          {match.status === 'completed' && <span className="match-score blue-score">{match.score1}</span>}
-                        </div>
-
-                        <div 
-                          className={getCompetitorClass(match, match.p2, 'red')}
-                          onMouseEnter={() => match.p2 && setHoveredCompetitorId(match.p2.id)}
-                          onMouseLeave={() => setHoveredCompetitorId(null)}
-                        >
-                          <div className="comp-bar red-bar"></div>
-                          <div style={{ flex: 1, paddingLeft: '0.75rem' }}>
-                            <div className="comp-name-line">{match.p2 ? match.p2.name : 'TBD'}</div>
-                          </div>
-                          {match.status === 'completed' && match.p2 && <span className="match-score red-score">{match.score2}</span>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Bracket Scoring Modal */}
       {selectedMatch && (
@@ -828,15 +641,6 @@ function BracketView({ divisionId, divisionName, rounds, brackets, setBrackets, 
           match={selectedMatch}
           onClose={() => setSelectedMatch(null)}
           onSave={handleSaveScore}
-        />
-      )}
-
-      {/* Repechage Scoring Modal */}
-      {selectedRepMatch && (
-        <MatchModal 
-          match={selectedRepMatch.match}
-          onClose={() => setSelectedRepMatch(null)}
-          onSave={handleSaveRepScore}
         />
       )}
     </div>

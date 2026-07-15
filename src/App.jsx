@@ -46,10 +46,6 @@ function App() {
     return saved ? JSON.parse(saved) : {};
   });
 
-  const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('tkd_settings_v3');
-    return saved ? JSON.parse(saved) : { useRepechage: true };
-  });
 
   const [activeTab, setActiveTab] = useState('competitors');
   const [selectedDivisionId, setSelectedDivisionId] = useState('');
@@ -63,9 +59,6 @@ function App() {
     localStorage.setItem('tkd_brackets_v3', JSON.stringify(brackets));
   }, [brackets]);
 
-  useEffect(() => {
-    localStorage.setItem('tkd_settings_v3', JSON.stringify(settings));
-  }, [settings]);
 
   // Compute divisions dynamically
   const divisions = {};
@@ -145,7 +138,7 @@ function App() {
         if (data.competitors && Array.isArray(data.competitors)) {
           setCompetitors(data.competitors);
           setBrackets(data.brackets || {});
-          setSettings(data.settings || { useRepechage: true });
+
           alert("Tournament data imported successfully!");
         } else {
           alert("Invalid data format. File must contain 'competitors' list.");
@@ -160,8 +153,7 @@ function App() {
   const handleExportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
       competitors,
-      brackets,
-      settings
+      brackets
     }, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
@@ -305,20 +297,6 @@ function App() {
               </table>
             </div>
 
-            <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-              <h3>Tournament Settings</h3>
-              <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={settings.useRepechage}
-                    onChange={(e) => setSettings(prev => ({ ...prev, useRepechage: e.target.checked }))}
-                    style={{ width: '18px', height: '18px' }}
-                  />
-                  Enable Double Bronze Repechage (Olympic Standard)
-                </label>
-              </div>
-            </div>
           </div>
         )}
 
@@ -354,9 +332,7 @@ function App() {
                 divisionId={selectedDivisionId}
                 divisionName={divisions[selectedDivisionId]?.name}
                 rounds={brackets[selectedDivisionId]}
-                brackets={brackets}
                 setBrackets={setBrackets}
-                useRepechage={settings.useRepechage}
               />
             ) : (
               <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
@@ -372,7 +348,6 @@ function App() {
           <ResultsView 
             divisions={divisions}
             brackets={brackets}
-            useRepechage={settings.useRepechage}
           />
         )}
       </main>

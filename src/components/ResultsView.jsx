@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { buildRepechageBrackets } from '../utils/bracketBuilder';
 import { nocToIso } from '../utils/countries';
 
-function ResultsView({ divisions, brackets, useRepechage }) {
+function ResultsView({ divisions, brackets }) {
   const [selectedDivisionId, setSelectedDivisionId] = useState('');
 
   // 1. Gather all divisions with their brackets and calculate completion statistics
@@ -18,12 +17,6 @@ function ResultsView({ divisions, brackets, useRepechage }) {
       let matchHistory = [];
 
       if (rounds && rounds.length > 0) {
-        // Retrieve repechage from brackets state or build if not present
-        let rep = null;
-        if (useRepechage) {
-          rep = brackets[id + "_repechage"] || buildRepechageBrackets(rounds);
-        }
-
         // Count main bracket matches
         rounds.forEach(round => {
           round.forEach(match => {
@@ -36,19 +29,6 @@ function ResultsView({ divisions, brackets, useRepechage }) {
             }
           });
         });
-
-        // Count repechage matches
-        if (useRepechage && rep) {
-          [...rep.bracketA, ...rep.bracketB].forEach(match => {
-            if (match.status !== 'walkover') {
-              totalMatches++;
-              if (match.status === 'completed') {
-                completedMatches++;
-                matchHistory.push(match);
-              }
-            }
-          });
-        }
 
         // Determine status
         const finalRound = rounds[rounds.length - 1];
@@ -73,26 +53,20 @@ function ResultsView({ divisions, brackets, useRepechage }) {
           let bronze1 = null;
           let bronze2 = null;
 
-          if (useRepechage && rep) {
-            const repAFinal = rep.bracketA?.[rep.bracketA.length - 1];
-            const repBFinal = rep.bracketB?.[rep.bracketB.length - 1];
-            
-            if (repAFinal?.winnerId) {
-              bronze1 = repAFinal.winnerId === repAFinal.p1?.id ? repAFinal.p1 : repAFinal.p2;
-            }
-            if (repBFinal?.winnerId) {
-              bronze2 = repBFinal.winnerId === repBFinal.p1?.id ? repBFinal.p1 : repBFinal.p2;
-            }
-          } else {
-            const semiRound = rounds[rounds.length - 2];
-            if (semiRound) {
-              const m1 = semiRound[0];
-              const m2 = semiRound[1];
-              if (m1?.status === 'completed' && m1.winnerId) {
-                bronze1 = m1.winnerId === m1.p1?.id ? m1.p2 : m1.p1;
+          const semiRound = rounds[rounds.length - 2];
+          if (semiRound) {
+            const m1 = semiRound[0];
+            const m2 = semiRound[1];
+            if (m1 && m1.winnerId) {
+              const loser = m1.winnerId === m1.p1?.id ? m1.p2 : m1.p1;
+              if (loser && loser.name) {
+                bronze1 = loser;
               }
-              if (m2?.status === 'completed' && m2.winnerId) {
-                bronze2 = m2.winnerId === m2.p1?.id ? m2.p2 : m2.p1;
+            }
+            if (m2 && m2.winnerId) {
+              const loser = m2.winnerId === m2.p1?.id ? m2.p2 : m2.p1;
+              if (loser && loser.name) {
+                bronze2 = loser;
               }
             }
           }
