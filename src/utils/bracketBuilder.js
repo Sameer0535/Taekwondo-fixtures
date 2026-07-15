@@ -163,7 +163,7 @@ export function propagateWalkovers(rounds) {
  * @param {string} winType - Type of win
  * @returns {Array} New updated rounds array
  */
-export function updateMatchScore(rounds, matchId, winnerId, score1, score2, winType) {
+export function updateMatchScore(rounds, matchId, winnerId, score1, score2, winType, roundScores) {
   const newRounds = JSON.parse(JSON.stringify(rounds));
   
   // Find and update the match
@@ -187,6 +187,7 @@ export function updateMatchScore(rounds, matchId, winnerId, score1, score2, winT
   targetMatch.score1 = score1;
   targetMatch.score2 = score2;
   targetMatch.winType = winType;
+  targetMatch.roundScores = roundScores;
   targetMatch.status = 'completed';
 
   // Clear subsequent path first (in case of score correction)

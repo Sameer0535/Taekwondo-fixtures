@@ -182,12 +182,12 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   };
 
   // Update score in main bracket
-  const handleSaveScore = (winnerId, score1, score2, winType) => {
+  const handleSaveScore = (winnerId, score1, score2, winType, roundScores) => {
     if (!selectedMatch) return;
     
     setBrackets(prev => {
       const currentRounds = prev[divisionId];
-      const updated = updateMatchScore(currentRounds, selectedMatch.id, winnerId, score1, score2, winType);
+      const updated = updateMatchScore(currentRounds, selectedMatch.id, winnerId, score1, score2, winType, roundScores);
       return {
         ...prev,
         [divisionId]: updated
@@ -270,6 +270,19 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
     const feedingMatchIndex = match.matchIndex * 2 + (isP1 ? 0 : 1);
     const feedingMatch = rounds[match.roundIndex - 1]?.[feedingMatchIndex];
     return feedingMatch ? `W${feedingMatch.matchNo}` : 'TBD';
+  };
+
+  const getMatchTooltip = (match) => {
+    if (match.status !== 'completed') return 'Click to score match';
+    if (!match.roundScores) return `${match.winType} Win (Score: ${match.score1}-${match.score2})`;
+    const roundsStr = match.roundScores
+      .map((r, i) => {
+        if (r.blue === null || r.red === null) return null;
+        return `R${i + 1}: ${r.blue}-${r.red}`;
+      })
+      .filter(Boolean)
+      .join(', ');
+    return `${match.winType} Win (${roundsStr || `${match.score1}-${match.score2}`})`;
   };
 
   // Helper to generate dynamic classes for competitors
@@ -460,6 +473,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                       onClick={() => {
                         setSelectedMatch(match);
                       }}
+                      title={getMatchTooltip(match)}
                     >
                       {/* Top label: Match Number + Round Name */}
                       <div className="match-info-bar">

@@ -474,6 +474,11 @@ function ResultsView({ divisions, brackets }) {
                                     </span>
                                     <span>{m.score2 !== null ? m.score2 : '-'}</span>
                                   </div>
+                                  {m.roundScores && (
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem', paddingLeft: '0.4rem', fontStyle: 'italic' }}>
+                                      Rounds: {m.roundScores.map((r, i) => r.blue !== null && r.red !== null ? `R${i + 1}: ${r.blue}-${r.red}` : null).filter(Boolean).join(', ')}
+                                    </div>
+                                  )}
                                 </div>
                               </td>
                               <td style={{ fontWeight: 'bold', color: 'var(--primary)' }}>

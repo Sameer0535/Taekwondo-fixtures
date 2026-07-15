@@ -1,25 +1,69 @@
 import { useState, useEffect } from 'react';
 
 function MatchModal({ match, onClose, onSave }) {
-  const { p1, p2, score1: initScore1, score2: initScore2, winnerId: initWinnerId, winType: initWinType } = match;
+  const { p1, p2, score1: initScore1, score2: initScore2, winnerId: initWinnerId, winType: initWinType, roundScores: initRoundScores } = match;
 
   const [score1, setScore1] = useState(initScore1 !== null ? initScore1 : 0);
   const [score2, setScore2] = useState(initScore2 !== null ? initScore2 : 0);
   const [winnerId, setWinnerId] = useState(initWinnerId || '');
   const [winType, setWinType] = useState(initWinType || 'PTS');
 
-  // Auto-select winner if scores change (standard points win)
+  // Round scores state (WT Best of 3 Rounds)
+  const [r1Blue, setR1Blue] = useState(() => {
+    if (initRoundScores?.[0]) return initRoundScores[0].blue ?? '';
+    return initScore1 !== null && initScore1 !== 0 && initScore1 !== 2 ? initScore1 : '';
+  });
+  const [r1Red, setR1Red] = useState(() => {
+    if (initRoundScores?.[0]) return initRoundScores[0].red ?? '';
+    return initScore2 !== null && initScore2 !== 0 && initScore2 !== 2 ? initScore2 : '';
+  });
+  
+  const [r2Blue, setR2Blue] = useState(initRoundScores?.[1]?.blue ?? '');
+  const [r2Red, setR2Red] = useState(initRoundScores?.[1]?.red ?? '');
+  const [r3Blue, setR3Blue] = useState(initRoundScores?.[2]?.blue ?? '');
+  const [r3Red, setR3Red] = useState(initRoundScores?.[2]?.red ?? '');
+
+  // Auto-calculate rounds won and winner based on round points
   useEffect(() => {
     if (winType === 'PTS' || winType === 'PTG') {
-      if (score1 > score2 && p1) {
+      let blueRounds = 0;
+      let redRounds = 0;
+
+      const evaluateRound = (blueVal, redVal) => {
+        const b = Number(blueVal);
+        const r = Number(redVal);
+        if (blueVal === '' || redVal === '' || isNaN(b) || isNaN(r)) return 0;
+        if (b > r) return 1;
+        if (r > b) return -1;
+        return 0;
+      };
+
+      const r1 = evaluateRound(r1Blue, r1Red);
+      const r2 = evaluateRound(r2Blue, r2Red);
+      const r3 = evaluateRound(r3Blue, r3Red);
+
+      if (r1 === 1) blueRounds++;
+      if (r1 === -1) redRounds++;
+      
+      if (r2 === 1) blueRounds++;
+      if (r2 === -1) redRounds++;
+      
+      if (r3 === 1) blueRounds++;
+      if (r3 === -1) redRounds++;
+
+      setScore1(blueRounds);
+      setScore2(redRounds);
+
+      // Best of 3: Winner is whoever wins 2 rounds
+      if (blueRounds >= 2 && p1) {
         setWinnerId(p1.id);
-      } else if (score2 > score1 && p2) {
+      } else if (redRounds >= 2 && p2) {
         setWinnerId(p2.id);
       } else {
         setWinnerId('');
       }
     }
-  }, [score1, score2, winType, p1, p2]);
+  }, [r1Blue, r1Red, r2Blue, r2Red, r3Blue, r3Red, winType, p1, p2]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,7 +71,14 @@ function MatchModal({ match, onClose, onSave }) {
       alert("Please select a winner before saving.");
       return;
     }
-    onSave(winnerId, Number(score1), Number(score2), winType);
+
+    const roundScores = [
+      { blue: r1Blue === '' ? null : Number(r1Blue), red: r1Red === '' ? null : Number(r1Red) },
+      { blue: r2Blue === '' ? null : Number(r2Blue), red: r2Red === '' ? null : Number(r2Red) },
+      { blue: r3Blue === '' ? null : Number(r3Blue), red: r3Red === '' ? null : Number(r3Red) }
+    ];
+
+    onSave(winnerId, Number(score1), Number(score2), winType, roundScores);
   };
 
   const hasP1 = !!p1;
@@ -82,17 +133,9 @@ function MatchModal({ match, onClose, onSave }) {
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p1?.club || '-'}</div>
                   
                   {p1 && (
-                    <div style={{ marginTop: '0.5rem' }}>
-                      <label className="form-label" style={{ color: 'var(--blue-comp)' }}>Points</label>
-                      <input 
-                        type="number" 
-                        min="0"
-                        className="form-control"
-                        style={{ borderColor: 'var(--blue-comp-border)' }}
-                        value={score1}
-                        onChange={e => setScore1(Number(e.target.value))}
-                        disabled={winType === 'WDR' || winType === 'DSQ' && winnerId !== p1.id}
-                      />
+                    <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rounds Won:</span>
+                      <strong style={{ fontSize: '1.25rem', color: 'var(--blue-comp)' }}>{score1}</strong>
                     </div>
                   )}
                 </div>
@@ -113,19 +156,116 @@ function MatchModal({ match, onClose, onSave }) {
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p2?.club || '-'}</div>
 
                   {p2 && (
-                    <div style={{ marginTop: '0.5rem' }}>
-                      <label className="form-label" style={{ color: 'var(--red-comp)' }}>Points</label>
-                      <input 
-                        type="number" 
-                        min="0"
-                        className="form-control"
-                        style={{ borderColor: 'var(--red-comp-border)' }}
-                        value={score2}
-                        onChange={e => setScore2(Number(e.target.value))}
-                        disabled={winType === 'WDR' || winType === 'DSQ' && winnerId !== p2.id}
-                      />
+                    <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rounds Won:</span>
+                      <strong style={{ fontSize: '1.25rem', color: 'var(--red-comp)' }}>{score2}</strong>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Round scores input panel */}
+              <div style={{ 
+                border: '1px solid var(--border-color)', 
+                borderRadius: '8px', 
+                padding: '1.25rem',
+                backgroundColor: 'var(--bg-tertiary)'
+              }}>
+                <h4 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
+                  🥋 Round Scores (Best of 3)
+                </h4>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: '1rem', alignItems: 'center', fontWeight: 'bold', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div>Round</div>
+                  <div style={{ color: 'var(--blue-comp)' }}>Blue Corner</div>
+                  <div style={{ color: 'var(--red-comp)' }}>Red Corner</div>
+                </div>
+
+                {/* Round 1 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: '1rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Round 1</div>
+                  <div>
+                    <input 
+                      type="number" 
+                      min="0"
+                      placeholder="Points"
+                      className="form-control"
+                      style={{ borderColor: 'var(--blue-comp-border)' }}
+                      value={r1Blue}
+                      onChange={e => setR1Blue(e.target.value === '' ? '' : Number(e.target.value))}
+                      disabled={winType === 'WDR' || winType === 'DSQ'}
+                    />
+                  </div>
+                  <div>
+                    <input 
+                      type="number" 
+                      min="0"
+                      placeholder="Points"
+                      className="form-control"
+                      style={{ borderColor: 'var(--red-comp-border)' }}
+                      value={r1Red}
+                      onChange={e => setR1Red(e.target.value === '' ? '' : Number(e.target.value))}
+                      disabled={winType === 'WDR' || winType === 'DSQ'}
+                    />
+                  </div>
+                </div>
+
+                {/* Round 2 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: '1rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Round 2</div>
+                  <div>
+                    <input 
+                      type="number" 
+                      min="0"
+                      placeholder="Points"
+                      className="form-control"
+                      style={{ borderColor: 'var(--blue-comp-border)' }}
+                      value={r2Blue}
+                      onChange={e => setR2Blue(e.target.value === '' ? '' : Number(e.target.value))}
+                      disabled={winType === 'WDR' || winType === 'DSQ'}
+                    />
+                  </div>
+                  <div>
+                    <input 
+                      type="number" 
+                      min="0"
+                      placeholder="Points"
+                      className="form-control"
+                      style={{ borderColor: 'var(--red-comp-border)' }}
+                      value={r2Red}
+                      onChange={e => setR2Red(e.target.value === '' ? '' : Number(e.target.value))}
+                      disabled={winType === 'WDR' || winType === 'DSQ'}
+                    />
+                  </div>
+                </div>
+
+                {/* Round 3 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Round 3</div>
+                  <div>
+                    <input 
+                      type="number" 
+                      min="0"
+                      placeholder="Points"
+                      className="form-control"
+                      style={{ borderColor: 'var(--blue-comp-border)' }}
+                      value={r3Blue}
+                      onChange={e => setR3Blue(e.target.value === '' ? '' : Number(e.target.value))}
+                      disabled={winType === 'WDR' || winType === 'DSQ'}
+                    />
+                  </div>
+                  <div>
+                    <input 
+                      type="number" 
+                      min="0"
+                      placeholder="Points"
+                      className="form-control"
+                      style={{ borderColor: 'var(--red-comp-border)' }}
+                      value={r3Red}
+                      onChange={e => setR3Red(e.target.value === '' ? '' : Number(e.target.value))}
+                      disabled={winType === 'WDR' || winType === 'DSQ'}
+                    />
+                  </div>
                 </div>
               </div>
 
