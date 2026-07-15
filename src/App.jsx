@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import CompetitorList from './components/CompetitorList';
 import BracketView from './components/BracketView';
-import CourtSchedule from './components/CourtSchedule';
+import ResultsView from './components/ResultsView';
 import { generateBracket } from './utils/bracketBuilder';
 import './App.css';
 
@@ -48,7 +48,7 @@ function App() {
 
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('tkd_settings_v3');
-    return saved ? JSON.parse(saved) : { useRepechage: true, courtCount: 2 };
+    return saved ? JSON.parse(saved) : { useRepechage: true };
   });
 
   const [activeTab, setActiveTab] = useState('competitors');
@@ -138,7 +138,7 @@ function App() {
         if (data.competitors && Array.isArray(data.competitors)) {
           setCompetitors(data.competitors);
           setBrackets(data.brackets || {});
-          setSettings(data.settings || { useRepechage: true, courtCount: 2 });
+          setSettings(data.settings || { useRepechage: true });
           alert("Tournament data imported successfully!");
         } else {
           alert("Invalid data format. File must contain 'competitors' list.");
@@ -199,10 +199,10 @@ function App() {
             Brackets
           </button>
           <button 
-            className={`nav-tab ${activeTab === 'courts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('courts')}
+            className={`nav-tab ${activeTab === 'results' ? 'active' : ''}`}
+            onClick={() => setActiveTab('results')}
           >
-            Court Schedule
+            Results
           </button>
         </nav>
 
@@ -310,19 +310,6 @@ function App() {
                   />
                   Enable Double Bronze Repechage (Olympic Standard)
                 </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>Number of Courts/Rings:</span>
-                  <select 
-                    value={settings.courtCount} 
-                    onChange={(e) => setSettings(prev => ({ ...prev, courtCount: Number(e.target.value) }))}
-                    className="form-control"
-                    style={{ width: '80px', padding: '0.25rem 0.5rem' }}
-                  >
-                    {[1, 2, 3, 4, 5].map(n => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
             </div>
           </div>
@@ -373,12 +360,11 @@ function App() {
           </div>
         )}
 
-        {activeTab === 'courts' && (
-          <CourtSchedule 
+        {activeTab === 'results' && (
+          <ResultsView 
             divisions={divisions}
             brackets={brackets}
-            setBrackets={setBrackets}
-            courtCount={settings.courtCount}
+            useRepechage={settings.useRepechage}
           />
         )}
       </main>
