@@ -308,124 +308,105 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   const semiRound = rounds[rounds.length - 2];
   const numSemiMatches = semiRound ? semiRound.filter(m => m.status !== 'walkover').length : 0;
 
-  // Sliced data for printing large brackets across multiple pages
   const isLargeBracket = rounds[0] && rounds[0].length > 8;
+
+  // ── Compact print-specific layout constants ──
+  // These are smaller than the screen constants so the bracket fills a landscape A4 page at readable size.
+  const P_CARD_H = 40;      // 8px info + 16px blue + 16px red
+  const P_GAP = 2;
+  const P_SLOT = P_CARD_H + P_GAP;  // 42px
+  const P_COL_W = 160;
+  const P_COL_GAP = 20;
+  const P_COL_STEP = P_COL_W + P_COL_GAP; // 180px
+  const P_MARGIN = 8;
+  const P_HEADER = 18;
+  const P_INFO_BAR_H = 8;
+  const P_ROW_H = 16;
+  const P_CARD_MID = P_CARD_H / 2;
+  const P_BLUE_MID = P_INFO_BAR_H + P_ROW_H / 2;
+  const P_RED_MID = P_INFO_BAR_H + P_ROW_H + P_ROW_H / 2;
 
   const printPages = useMemo(() => {
     if (!isLargeBracket) return [];
+    if (!rounds || rounds.length === 0) return [];
 
-    const totalRounds = processedRounds.length;
+    const totalRounds = rounds.length;
     if (totalRounds < 3) return [];
 
-    // 1. Pool A (Top Half) - Ends at Quarterfinals (totalRounds - 2)
-    const poolARounds = [];
-    const offsetA = processedRounds[0][0]?.y || 0;
-    for (let r = 0; r < totalRounds - 2; r++) {
-      const roundMatches = processedRounds[r];
-      const sliceCount = roundMatches.length / 2;
-      const sliced = roundMatches.slice(0, sliceCount).map(m => ({
-        ...m,
-        y: m.y - offsetA
-      }));
-      poolARounds.push(sliced);
-    }
-    const maxAHeight = MARGIN + HEADER + poolARounds[0].length * SLOT + MARGIN;
-
-    // Lines for Pool A
-    const poolALines = [];
-    for (let r = 0; r < poolARounds.length - 1; r++) {
-      const round = poolARounds[r];
-      const nextRound = poolARounds[r + 1];
-      for (const match of round) {
-        const isTopBranch = match.matchIndex % 2 === 0;
-        const nextMatchIdx = Math.floor(match.matchIndex / 2);
-        const nextMatch = nextRound[nextMatchIdx];
-        if (nextMatch) {
-          const x1 = MARGIN + r * COL_STEP + COL_W;
-          const x2 = MARGIN + (r + 1) * COL_STEP;
-          const y1 = match.y + CARD_MID;
-          const y2 = nextMatch.y + (isTopBranch ? BLUE_SLOT_MID : RED_SLOT_MID);
-          const d = getStepPath(x1, y1, x2, y2);
-          poolALines.push({ d });
+    // Helper: lay out a sub-bracket from scratch with compact coordinates
+    const layoutPool = (matchesByRound) => {
+      const laid = matchesByRound.map(round => round.map(m => ({ ...m })));
+      // Position round 0 leaves
+      for (let i = 0; i < laid[0].length; i++) {
+        laid[0][i].py = P_MARGIN + P_HEADER + i * P_SLOT;
+      }
+      // Center parent rounds
+      for (let r = 1; r < laid.length; r++) {
+        for (let m = 0; m < laid[r].length; m++) {
+          if (laid[r][m].status === 'walkover') {
+            // inherit from child that feeds into this slot
+            const child = laid[r - 1][m * 2] || laid[r - 1][m * 2 + 1];
+            laid[r][m].py = child ? child.py : P_MARGIN + P_HEADER + m * P_SLOT;
+          } else {
+            const top = laid[r - 1][m * 2];
+            const bot = laid[r - 1][m * 2 + 1];
+            if (top && bot) {
+              laid[r][m].py = (top.py + bot.py) / 2;
+            } else {
+              laid[r][m].py = P_MARGIN + P_HEADER + m * P_SLOT * Math.pow(2, r);
+            }
+          }
         }
       }
-    }
-
-    // 2. Pool B (Bottom Half) - Ends at Quarterfinals (totalRounds - 2)
-    const poolBRounds = [];
-    const firstMatchB = processedRounds[0][processedRounds[0].length / 2];
-    const offsetB = firstMatchB?.y || 0;
-    for (let r = 0; r < totalRounds - 2; r++) {
-      const roundMatches = processedRounds[r];
-      const half = roundMatches.length / 2;
-      const sliced = roundMatches.slice(half).map(m => ({
-        ...m,
-        y: m.y - offsetB
-      }));
-      poolBRounds.push(sliced);
-    }
-
-    // Lines for Pool B
-    const poolBLines = [];
-    for (let r = 0; r < poolBRounds.length - 1; r++) {
-      const round = poolBRounds[r];
-      const nextRound = poolBRounds[r + 1];
-      for (const match of round) {
-        const isTopBranch = match.matchIndex % 2 === 0;
-        const nextMatchIdx = Math.floor(match.matchIndex / 2);
-        const nextMatch = nextRound[nextMatchIdx];
-        if (nextMatch) {
-          const x1 = MARGIN + r * COL_STEP + COL_W;
-          const x2 = MARGIN + (r + 1) * COL_STEP;
-          const y1 = match.y + CARD_MID;
-          const y2 = nextMatch.y + (isTopBranch ? BLUE_SLOT_MID : RED_SLOT_MID);
-          const d = getStepPath(x1, y1, x2, y2);
-          poolBLines.push({ d });
+      // Generate lines
+      const lines = [];
+      for (let r = 0; r < laid.length - 1; r++) {
+        for (const match of laid[r]) {
+          if (match.status === 'walkover') continue;
+          const isTop = match.matchIndex % 2 === 0;
+          const nextIdx = Math.floor(match.matchIndex / 2);
+          const next = laid[r + 1][nextIdx];
+          if (!next || next.status === 'walkover') continue;
+          const x1 = P_MARGIN + r * P_COL_STEP + P_COL_W;
+          const x2 = P_MARGIN + (r + 1) * P_COL_STEP;
+          const y1 = match.py + P_CARD_MID;
+          const y2 = next.py + (isTop ? P_BLUE_MID : P_RED_MID);
+          lines.push({ d: getStepPath(x1, y1, x2, y2) });
         }
       }
-    }
-
-    // 3. Finals (Semifinals & Finals) - Compact 4-player layout
-    const finalsRounds = [];
-    const semiMatches = processedRounds[totalRounds - 2];
-    const finalMatch = processedRounds[totalRounds - 1][0];
-
-    const compactSemis = semiMatches.map((m, idx) => ({
-      ...m,
-      y: MARGIN + HEADER + idx * SLOT
-    }));
-    const compactFinal = {
-      ...finalMatch,
-      y: MARGIN + HEADER + SLOT / 2
+      const leafCount = laid[0].length;
+      const height = P_MARGIN + P_HEADER + leafCount * P_SLOT + P_MARGIN;
+      const width = P_MARGIN * 2 + laid.length * P_COL_STEP;
+      return { rounds: laid, lines, height, width };
     };
 
-    finalsRounds.push(compactSemis);
-    finalsRounds.push([compactFinal]);
-
-    // Lines for Finals
-    const finalsLines = [];
-    const fRound = finalsRounds[0];
-    const fNextRound = finalsRounds[1];
-    for (const match of fRound) {
-      const isTopBranch = match.matchIndex % 2 === 0;
-      const nextMatchIdx = Math.floor(match.matchIndex / 2);
-      const nextMatch = fNextRound[nextMatchIdx];
-      if (nextMatch) {
-        const x1 = MARGIN + 0 * COL_STEP + COL_W;
-        const x2 = MARGIN + 1 * COL_STEP;
-        const y1 = match.y + CARD_MID;
-        const y2 = nextMatch.y + (isTopBranch ? BLUE_SLOT_MID : RED_SLOT_MID);
-        const d = getStepPath(x1, y1, x2, y2);
-        finalsLines.push({ d });
-      }
+    // Slice rounds into Pool A (top half → QF) and Pool B (bottom half → QF)
+    const poolARoundData = [];
+    const poolBRoundData = [];
+    for (let r = 0; r < totalRounds - 2; r++) {
+      const rnd = processedRounds[r];
+      const half = rnd.length / 2;
+      // Re-index matchIndex for Pool A starting from 0
+      poolARoundData.push(rnd.slice(0, half).map((m, i) => ({ ...m, matchIndex: i })));
+      // Re-index matchIndex for Pool B starting from 0
+      poolBRoundData.push(rnd.slice(half).map((m, i) => ({ ...m, matchIndex: i })));
     }
 
+    const poolA = layoutPool(poolARoundData);
+    const poolB = layoutPool(poolBRoundData);
+
+    // Finals: Semifinals + Final with compact layout
+    const semiMatches = processedRounds[totalRounds - 2].map((m, i) => ({ ...m, matchIndex: i }));
+    const finalMatch = { ...processedRounds[totalRounds - 1][0], matchIndex: 0 };
+    const finalsData = [[...semiMatches], [finalMatch]];
+    const finals = layoutPool(finalsData);
+
     return [
-      { name: "Pool A (Top Half)", rounds: poolARounds, lines: poolALines, height: maxAHeight, width: MARGIN * 2 + poolARounds.length * COL_STEP },
-      { name: "Pool B (Bottom Half)", rounds: poolBRounds, lines: poolBLines, height: maxAHeight, width: MARGIN * 2 + poolBRounds.length * COL_STEP },
-      { name: "Finals & Semifinals", rounds: finalsRounds, lines: finalsLines, height: MARGIN + HEADER + 2 * SLOT + MARGIN, width: 1004 }
+      { name: "Pool A (Top Half)", ...poolA },
+      { name: "Pool B (Bottom Half)", ...poolB },
+      { name: "Finals & Semifinals", ...finals, isFinals: true }
     ];
-  }, [processedRounds, isLargeBracket]);
+  }, [processedRounds, isLargeBracket, rounds]);
 
 
 
@@ -772,13 +753,13 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
 
       {/* Print-only split pages layout for large brackets */}
       {isLargeBracket && printPages.map((page, pIdx) => {
-        const scaleVal = Math.min(1.0, 1000 / page.width, 580 / page.height);
+        const scaleVal = Math.min(1.0, 1000 / page.width, 620 / page.height);
         return (
-          <div key={pIdx} className="print-only-page print-page" style={{ position: 'relative', width: '1040px', height: '680px', boxSizing: 'border-box', padding: '20px' }}>
-            <div className="print-header" style={{ marginBottom: '1rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.5rem' }}>
-              <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--primary)' }}>
-                {divisionName} - {page.name}
-              </h2>
+          <div key={pIdx} className="print-only-page print-page">
+            <div style={{ marginBottom: '0.5rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.25rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--primary)' }}>
+                {divisionName} — {page.name}
+              </h3>
             </div>
             
             <div 
@@ -790,86 +771,56 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                 transformOrigin: 'top left'
               }}
             >
-              {/* SVG lines */}
               <svg 
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  pointerEvents: 'none'
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none'
                 }}
               >
                 {page.lines.map((line, idx) => (
-                  <path 
-                    key={idx}
-                    d={line.d}
-                    stroke="#cbd5e1"
-                    strokeWidth="2"
-                    fill="none"
-                  />
+                  <path key={idx} d={line.d} stroke="#94a3b8" strokeWidth="1.5" fill="none" />
                 ))}
               </svg>
 
-              {/* Rounds and Match cards */}
               {page.rounds.map((round, rIndex) => (
                 <div 
                   key={rIndex}
                   style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: `${MARGIN + rIndex * COL_STEP}px`,
-                    width: '260px',
-                    height: '100%'
+                    position: 'absolute', top: 0,
+                    left: `${P_MARGIN + rIndex * P_COL_STEP}px`,
+                    width: `${P_COL_W}px`, height: '100%'
                   }}
                 >
-                  <div className="print-round-header" style={{ position: 'absolute', top: `${MARGIN}px`, left: 0, width: '100%' }}>
-                    {page.name === "Finals & Semifinals" 
+                  <div style={{ position: 'absolute', top: `${P_MARGIN}px`, left: 0, width: '100%', fontWeight: 'bold', fontSize: '0.55rem', color: '#475569', textTransform: 'uppercase' }}>
+                    {page.isFinals
                       ? (rIndex === 0 ? "Semifinals" : "Final") 
-                      : (rIndex === 0 ? "First Round" : getRoundHeader(rIndex, processedRounds.length))}
+                      : getRoundHeader(rIndex, processedRounds.length)}
                   </div>
 
                   {round.map((match) => {
-                    const flagCodeP1 = getFlagCode(match.p1);
-                    const flagCodeP2 = getFlagCode(match.p2);
+                    if (match.status === 'walkover') return null;
                     return (
                       <div 
                         key={match.id}
                         style={{ 
-                          position: 'absolute',
-                          top: `${match.y}px`,
-                          left: 0,
-                          width: '260px',
-                          height: `${CARD_H}px`
+                          position: 'absolute', top: `${match.py}px`, left: 0,
+                          width: `${P_COL_W}px`, height: `${P_CARD_H}px`
                         }}
                       >
-                        <div className="match-card" style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
-                          <div className="match-info-bar" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Match {match.matchNo}</span>
-                            {match.status === 'completed' && <span className="badge badge-blue">{match.winType}</span>}
+                        <div style={{ border: '1px solid #cbd5e1', borderRadius: '3px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
+                          <div style={{ height: `${P_INFO_BAR_H}px`, padding: '0 4px', fontSize: '0.4rem', backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#64748b' }}>
+                            <span>M{match.matchNo}</span>
                           </div>
-                          
-                          {/* Blue corner */}
-                          <div className="match-competitor blue-corner" style={{ display: 'flex', alignItems: 'center', height: '28px', borderBottom: '1px solid var(--border-color)', padding: '0 0.5rem' }}>
-                            <span style={{ flex: 1, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {match.p1 ? match.p1.name : getFeedingPlaceholder(true, match)}
+                          <div style={{ height: `${P_ROW_H}px`, padding: '0 4px', fontSize: '0.5rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white' }}>
+                            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? 'bold' : 'normal' }}>
+                              {match.p1 ? match.p1.name : (match.feedsFrom ? `W${match.feedsFrom.blue}` : 'TBD')}
                             </span>
-                            {match.p1 && flagCodeP1 && (
-                              <img src={`https://flagcdn.com/w40/${flagCodeP1}.png`} style={{ width: '14px', height: '9px', objectFit: 'cover' }} />
-                            )}
-                            {match.status === 'completed' && <span style={{ marginLeft: '0.5rem', fontWeight: 'bold' }}>{match.score1}</span>}
+                            {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '2px' }}>{match.score1}</span>}
                           </div>
-
-                          {/* Red corner */}
-                          <div className="match-competitor red-corner" style={{ display: 'flex', alignItems: 'center', height: '28px', padding: '0 0.5rem' }}>
-                            <span style={{ flex: 1, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {match.p2 ? match.p2.name : getFeedingPlaceholder(false, match)}
+                          <div style={{ height: `${P_ROW_H}px`, padding: '0 4px', fontSize: '0.5rem', display: 'flex', alignItems: 'center', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white' }}>
+                            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? 'bold' : 'normal' }}>
+                              {match.p2 ? match.p2.name : (match.feedsFrom ? `W${match.feedsFrom.red}` : 'TBD')}
                             </span>
-                            {match.p2 && flagCodeP2 && (
-                              <img src={`https://flagcdn.com/w40/${flagCodeP2}.png`} style={{ width: '14px', height: '9px', objectFit: 'cover' }} />
-                            )}
-                            {match.status === 'completed' && <span style={{ marginLeft: '0.5rem', fontWeight: 'bold' }}>{match.score2}</span>}
+                            {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '2px' }}>{match.score2}</span>}
                           </div>
                         </div>
                       </div>
@@ -877,59 +828,37 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                   })}
                 </div>
               ))}
-
-              {/* Standing Box - ONLY rendered on the Finals sheet */}
-              {page.name === "Finals & Semifinals" && podium && (
-                <div 
-                  className="standings-box" 
-                  style={{ 
-                    position: 'absolute',
-                    top: `${MARGIN + HEADER}px`,
-                    left: `${MARGIN + 2 * COL_STEP}px`,
-                    width: '260px', 
-                    border: '1px solid var(--border-color)', 
-                    borderRadius: '6px', 
-                    backgroundColor: 'white',
-                    overflow: 'hidden',
-                    boxShadow: 'var(--shadow-sm)',
-                    zIndex: 10
-                  }}
-                >
-                  <table className="custom-table" style={{ fontSize: '0.8rem' }}>
-                    <tbody>
-                      <tr>
-                        <td style={{ width: '45px', fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>1st</td>
-                        <td style={{ padding: '0.4rem 0.75rem', fontWeight: podium.first ? 'bold' : 'normal' }}>
-                          {podium.first?.name || ''}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>2nd</td>
-                        <td style={{ padding: '0.4rem 0.75rem' }}>
-                          {podium.second?.name || ''}
-                        </td>
-                      </tr>
-                      {numSemiMatches >= 1 && (
-                        <tr>
-                          <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                          <td style={{ padding: '0.4rem 0.75rem' }}>
-                            {podium.bronze1?.name || ''}
-                          </td>
-                        </tr>
-                      )}
-                      {numSemiMatches >= 2 && (
-                        <tr>
-                          <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                          <td style={{ padding: '0.4rem 0.75rem' }}>
-                            {podium.bronze2?.name || ''}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </div>
+
+            {/* Podium block — ONLY on Finals page, bottom-right corner */}
+            {page.isFinals && podium && (
+              <div style={{ position: 'absolute', bottom: '20px', right: '20px', width: '200px', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: 'white', overflow: 'hidden' }}>
+                <table style={{ width: '100%', fontSize: '0.6rem', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ width: '30px', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '3px', borderRight: '1px solid #e2e8f0' }}>1st</td>
+                      <td style={{ padding: '3px 6px', fontWeight: podium.first ? 'bold' : 'normal' }}>{podium.first?.name || ''}</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '3px', borderRight: '1px solid #e2e8f0' }}>2nd</td>
+                      <td style={{ padding: '3px 6px' }}>{podium.second?.name || ''}</td>
+                    </tr>
+                    {numSemiMatches >= 1 && (
+                      <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '3px', borderRight: '1px solid #e2e8f0' }}>3rd</td>
+                        <td style={{ padding: '3px 6px' }}>{podium.bronze1?.name || ''}</td>
+                      </tr>
+                    )}
+                    {numSemiMatches >= 2 && (
+                      <tr>
+                        <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '3px', borderRight: '1px solid #e2e8f0' }}>3rd</td>
+                        <td style={{ padding: '3px 6px' }}>{podium.bronze2?.name || ''}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         );
       })}

@@ -763,7 +763,7 @@ body {
     background-color: white !important;
     color: black !important;
   }
-  .app-header, .btn, .header-actions, .no-print, select, .round-header {
+  .app-header, .btn, .header-actions, .no-print, select, .round-header, .card-title {
     display: none !important;
   }
   .container {
