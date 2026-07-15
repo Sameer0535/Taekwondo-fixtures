@@ -18,10 +18,10 @@ function ResultsView({ divisions, brackets, useRepechage }) {
       let matchHistory = [];
 
       if (rounds && rounds.length > 0) {
-        // Build repechage if enabled
+        // Retrieve repechage from brackets state or build if not present
         let rep = null;
         if (useRepechage) {
-          rep = buildRepechageBrackets(rounds);
+          rep = brackets[id + "_repechage"] || buildRepechageBrackets(rounds);
         }
 
         // Count main bracket matches

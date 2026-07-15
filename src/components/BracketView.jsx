@@ -15,9 +15,8 @@ const getStepPath = (x1, y1, x2, y2) => {
   return `M ${x1} ${y1} H ${xmid - r} Q ${xmid} ${y1}, ${xmid} ${y1 + dy} V ${y2 - dy} Q ${xmid} ${y2}, ${xmid + r} ${y2} H ${x2}`;
 };
 
-function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepechage }) {
+function BracketView({ divisionId, divisionName, rounds, brackets, setBrackets, useRepechage }) {
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [repechageBrackets, setRepechageBrackets] = useState(null);
   const [selectedRepMatch, setSelectedRepMatch] = useState(null);
 
   // Hover Path Tracking State
@@ -29,6 +28,21 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const containerRef = useRef(null);
+
+  // Compute repechage brackets if enabled
+  const repechageBrackets = useMemo(() => {
+    if (!useRepechage || !rounds) return null;
+    
+    const finalRound = rounds[rounds.length - 1];
+    const finalMatch = finalRound?.[0];
+    if (finalMatch?.status !== 'completed') return null;
+
+    if (brackets[divisionId + "_repechage"]) {
+      return brackets[divisionId + "_repechage"];
+    }
+
+    return buildRepechageBrackets(rounds);
+  }, [brackets, divisionId, rounds, useRepechage]);
 
   // Layout constants — MUST stay in sync with CSS card dimensions
   // CSS: .match-info-bar height: 24px (box-sizing: border-box)
@@ -120,19 +134,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
     }
   }, [divisionId, containerWidth]);
 
-  // Compute repechage brackets if enabled
-  useEffect(() => {
-    if (useRepechage && rounds) {
-      const rep = buildRepechageBrackets(rounds);
-      setBrackets(prev => {
-        // Just verify/rebuild to synchronize
-        return prev;
-      });
-      setRepechageBrackets(rep);
-    } else {
-      setRepechageBrackets(null);
-    }
-  }, [rounds, useRepechage]);
+
 
   // Zoom Handler
   const handleZoom = (factor) => {
@@ -202,10 +204,27 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
     setBrackets(prev => {
       const currentRounds = prev[divisionId];
       const updated = updateMatchScore(currentRounds, selectedMatch.id, winnerId, score1, score2, winType);
-      return {
+      
+      // Check if the final match has been completed
+      const finalRound = updated[updated.length - 1];
+      const finalMatchObj = finalRound?.[0];
+      
+      const newBracketsState = {
         ...prev,
         [divisionId]: updated
       };
+      
+      if (finalMatchObj?.status === 'completed' && useRepechage) {
+        // Seed the repechage bracket if it doesn't exist
+        if (!newBracketsState[divisionId + "_repechage"]) {
+          newBracketsState[divisionId + "_repechage"] = buildRepechageBrackets(updated);
+        }
+      } else {
+        // If final is not complete, clear any old repechage brackets
+        delete newBracketsState[divisionId + "_repechage"];
+      }
+
+      return newBracketsState;
     });
     
     setSelectedMatch(null);
@@ -238,9 +257,12 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets, useRepecha
       nextMatch.p1 = { ...winnerObj };
     }
 
-    setRepechageBrackets(prev => ({
+    setBrackets(prev => ({
       ...prev,
-      [targetBracketKey]: targetBracket
+      [divisionId + "_repechage"]: {
+        ...repechageBrackets,
+        [targetBracketKey]: targetBracket
+      }
     }));
 
     setSelectedRepMatch(null);

@@ -94,21 +94,28 @@ function App() {
       return;
     }
     const newBracket = generateBracket(divComps);
-    setBrackets(prev => ({
-      ...prev,
-      [divId]: newBracket
-    }));
+    setBrackets(prev => {
+      const nextBrackets = {
+        ...prev,
+        [divId]: newBracket
+      };
+      delete nextBrackets[divId + "_repechage"];
+      return nextBrackets;
+    });
   };
 
   const handleGenerateAllBrackets = () => {
-    const newBrackets = { ...brackets };
-    Object.keys(divisions).forEach(divId => {
-      const divComps = divisions[divId].competitors;
-      if (divComps.length >= 2) {
-        newBrackets[divId] = generateBracket(divComps);
-      }
+    setBrackets(prev => {
+      const nextBrackets = { ...prev };
+      Object.keys(divisions).forEach(divId => {
+        const divComps = divisions[divId].competitors;
+        if (divComps.length >= 2) {
+          nextBrackets[divId] = generateBracket(divComps);
+          delete nextBrackets[divId + "_repechage"];
+        }
+      });
+      return nextBrackets;
     });
-    setBrackets(newBrackets);
     alert("Brackets generated/reset for all valid divisions!");
   };
 
@@ -347,6 +354,7 @@ function App() {
                 divisionId={selectedDivisionId}
                 divisionName={divisions[selectedDivisionId]?.name}
                 rounds={brackets[selectedDivisionId]}
+                brackets={brackets}
                 setBrackets={setBrackets}
                 useRepechage={settings.useRepechage}
               />
