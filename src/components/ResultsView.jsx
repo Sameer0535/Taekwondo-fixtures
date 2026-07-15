@@ -88,7 +88,7 @@ function ResultsView({ divisions, brackets }) {
     });
 
     return list;
-  }, [divisions, brackets, useRepechage]);
+  }, [divisions, brackets]);
 
   // Overall statistics for dashboard cards
   const statsSummary = useMemo(() => {
