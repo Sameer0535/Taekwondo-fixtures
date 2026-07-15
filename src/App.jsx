@@ -32,7 +32,21 @@ const SAMPLE_COMPETITORS = [
   { id: 'c17', name: 'Oussama Oueslati', club: 'Tunis Center', country: 'IND', seed: 5, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '1st Dan' },
   { id: 'c18', name: 'Steven Lopez', club: 'Texas Legacy', country: 'USA', seed: 6, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '5th Dan' },
   { id: 'c19', name: 'Aaron Cook', club: 'Chisinau Giants', country: 'GBR', seed: 7, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '4th Dan' },
-  { id: 'c20', name: 'Nikita Rafalovich', club: 'Tashkent Peak', country: 'UZB', seed: 8, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '3rd Dan' }
+  { id: 'c20', name: 'Nikita Rafalovich', club: 'Tashkent Peak', country: 'UZB', seed: 8, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '3rd Dan' },
+  ...Array.from({ length: 52 }, (_, index) => {
+    const i = index + 1;
+    return {
+      id: `c_large_${i}`,
+      name: `Player ${i}`,
+      club: `Academy ${String.fromCharCode(65 + (i % 26))}`,
+      country: i % 2 === 0 ? 'KOR' : 'IND',
+      seed: i <= 8 ? i : null,
+      gender: 'Male',
+      ageCategory: 'Senior',
+      weightClass: 'Under 58kg',
+      rank: `${(i % 4) + 1}st Dan`
+    };
+  })
 ];
 
 function App() {

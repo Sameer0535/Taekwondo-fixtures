@@ -811,6 +811,33 @@ body {
     right: 20px !important;
     z-index: 100 !important;
   }
+  .large-bracket-screen {
+    display: none !important;
+  }
+  .print-only-page {
+    display: block !important;
+    page-break-after: always;
+    break-after: page;
+    position: relative;
+    width: 1040px !important;
+    height: 680px !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    background-color: white !important;
+    overflow: hidden !important;
+  }
+  .print-round-header {
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: #475569 !important;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.print-only-page {
+  display: none;
 }
 
 /* Disable CSS-based connection lines in favor of perfect dynamic SVG overlay lines */

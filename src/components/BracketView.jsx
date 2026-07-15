@@ -308,6 +308,125 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   const semiRound = rounds[rounds.length - 2];
   const numSemiMatches = semiRound ? semiRound.filter(m => m.status !== 'walkover').length : 0;
 
+  // Sliced data for printing large brackets across multiple pages
+  const isLargeBracket = rounds[0] && rounds[0].length > 8;
+
+  const printPages = useMemo(() => {
+    if (!isLargeBracket) return [];
+
+    const totalRounds = processedRounds.length;
+    if (totalRounds < 3) return [];
+
+    // 1. Pool A (Top Half) - Ends at Quarterfinals (totalRounds - 2)
+    const poolARounds = [];
+    const offsetA = processedRounds[0][0]?.y || 0;
+    for (let r = 0; r < totalRounds - 2; r++) {
+      const roundMatches = processedRounds[r];
+      const sliceCount = roundMatches.length / 2;
+      const sliced = roundMatches.slice(0, sliceCount).map(m => ({
+        ...m,
+        y: m.y - offsetA
+      }));
+      poolARounds.push(sliced);
+    }
+    const maxAHeight = MARGIN + HEADER + poolARounds[0].length * SLOT + MARGIN;
+
+    // Lines for Pool A
+    const poolALines = [];
+    for (let r = 0; r < poolARounds.length - 1; r++) {
+      const round = poolARounds[r];
+      const nextRound = poolARounds[r + 1];
+      for (const match of round) {
+        const isTopBranch = match.matchIndex % 2 === 0;
+        const nextMatchIdx = Math.floor(match.matchIndex / 2);
+        const nextMatch = nextRound[nextMatchIdx];
+        if (nextMatch) {
+          const x1 = MARGIN + r * COL_STEP + COL_W;
+          const x2 = MARGIN + (r + 1) * COL_STEP;
+          const y1 = match.y + CARD_MID;
+          const y2 = nextMatch.y + (isTopBranch ? BLUE_SLOT_MID : RED_SLOT_MID);
+          const d = getStepPath(x1, y1, x2, y2);
+          poolALines.push({ d });
+        }
+      }
+    }
+
+    // 2. Pool B (Bottom Half) - Ends at Quarterfinals (totalRounds - 2)
+    const poolBRounds = [];
+    const firstMatchB = processedRounds[0][processedRounds[0].length / 2];
+    const offsetB = firstMatchB?.y || 0;
+    for (let r = 0; r < totalRounds - 2; r++) {
+      const roundMatches = processedRounds[r];
+      const half = roundMatches.length / 2;
+      const sliced = roundMatches.slice(half).map(m => ({
+        ...m,
+        y: m.y - offsetB
+      }));
+      poolBRounds.push(sliced);
+    }
+
+    // Lines for Pool B
+    const poolBLines = [];
+    for (let r = 0; r < poolBRounds.length - 1; r++) {
+      const round = poolBRounds[r];
+      const nextRound = poolBRounds[r + 1];
+      for (const match of round) {
+        const isTopBranch = match.matchIndex % 2 === 0;
+        const nextMatchIdx = Math.floor(match.matchIndex / 2);
+        const nextMatch = nextRound[nextMatchIdx];
+        if (nextMatch) {
+          const x1 = MARGIN + r * COL_STEP + COL_W;
+          const x2 = MARGIN + (r + 1) * COL_STEP;
+          const y1 = match.y + CARD_MID;
+          const y2 = nextMatch.y + (isTopBranch ? BLUE_SLOT_MID : RED_SLOT_MID);
+          const d = getStepPath(x1, y1, x2, y2);
+          poolBLines.push({ d });
+        }
+      }
+    }
+
+    // 3. Finals (Semifinals & Finals) - Compact 4-player layout
+    const finalsRounds = [];
+    const semiMatches = processedRounds[totalRounds - 2];
+    const finalMatch = processedRounds[totalRounds - 1][0];
+
+    const compactSemis = semiMatches.map((m, idx) => ({
+      ...m,
+      y: MARGIN + HEADER + idx * SLOT
+    }));
+    const compactFinal = {
+      ...finalMatch,
+      y: MARGIN + HEADER + SLOT / 2
+    };
+
+    finalsRounds.push(compactSemis);
+    finalsRounds.push([compactFinal]);
+
+    // Lines for Finals
+    const finalsLines = [];
+    const fRound = finalsRounds[0];
+    const fNextRound = finalsRounds[1];
+    for (const match of fRound) {
+      const isTopBranch = match.matchIndex % 2 === 0;
+      const nextMatchIdx = Math.floor(match.matchIndex / 2);
+      const nextMatch = fNextRound[nextMatchIdx];
+      if (nextMatch) {
+        const x1 = MARGIN + 0 * COL_STEP + COL_W;
+        const x2 = MARGIN + 1 * COL_STEP;
+        const y1 = match.y + CARD_MID;
+        const y2 = nextMatch.y + (isTopBranch ? BLUE_SLOT_MID : RED_SLOT_MID);
+        const d = getStepPath(x1, y1, x2, y2);
+        finalsLines.push({ d });
+      }
+    }
+
+    return [
+      { name: "Pool A (Top Half)", rounds: poolARounds, lines: poolALines, height: maxAHeight, width: MARGIN * 2 + poolARounds.length * COL_STEP },
+      { name: "Pool B (Bottom Half)", rounds: poolBRounds, lines: poolBLines, height: maxAHeight, width: MARGIN * 2 + poolBRounds.length * COL_STEP },
+      { name: "Finals & Semifinals", rounds: finalsRounds, lines: finalsLines, height: MARGIN + HEADER + 2 * SLOT + MARGIN, width: 1004 }
+    ];
+  }, [processedRounds, isLargeBracket]);
+
 
 
   // Collect and generate curved & straight connection lines
@@ -376,7 +495,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
 
       {/* Main Bracket Canvas */}
       <div 
-        className="bracket-wrapper"
+        className={`bracket-wrapper ${isLargeBracket ? 'large-bracket-screen' : ''}`}
         ref={containerRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -606,7 +725,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
         )}
 
         {/* Duplicate copy for print layout - rendered outside zoomed bracket-container so it can escape container bounds and use position: fixed relative to paper boundary */}
-        {podium && (
+        {!isLargeBracket && podium && (
           <div className="standings-box standings-print" style={{ 
             width: '260px', 
             border: '1px solid var(--border-color)', 
@@ -650,6 +769,170 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
           </div>
         )}
       </div>
+
+      {/* Print-only split pages layout for large brackets */}
+      {isLargeBracket && printPages.map((page, pIdx) => {
+        const scaleVal = Math.min(1.0, 1000 / page.width, 580 / page.height);
+        return (
+          <div key={pIdx} className="print-only-page print-page" style={{ position: 'relative', width: '1040px', height: '680px', boxSizing: 'border-box', padding: '20px' }}>
+            <div className="print-header" style={{ marginBottom: '1rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.5rem' }}>
+              <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--primary)' }}>
+                {divisionName} - {page.name}
+              </h2>
+            </div>
+            
+            <div 
+              style={{ 
+                position: 'relative', 
+                width: `${page.width}px`, 
+                height: `${page.height}px`,
+                transform: `scale(${scaleVal})`,
+                transformOrigin: 'top left'
+              }}
+            >
+              {/* SVG lines */}
+              <svg 
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  pointerEvents: 'none'
+                }}
+              >
+                {page.lines.map((line, idx) => (
+                  <path 
+                    key={idx}
+                    d={line.d}
+                    stroke="#cbd5e1"
+                    strokeWidth="2"
+                    fill="none"
+                  />
+                ))}
+              </svg>
+
+              {/* Rounds and Match cards */}
+              {page.rounds.map((round, rIndex) => (
+                <div 
+                  key={rIndex}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: `${MARGIN + rIndex * COL_STEP}px`,
+                    width: '260px',
+                    height: '100%'
+                  }}
+                >
+                  <div className="print-round-header" style={{ position: 'absolute', top: `${MARGIN}px`, left: 0, width: '100%' }}>
+                    {page.name === "Finals & Semifinals" 
+                      ? (rIndex === 0 ? "Semifinals" : "Final") 
+                      : (rIndex === 0 ? "First Round" : getRoundHeader(rIndex, processedRounds.length))}
+                  </div>
+
+                  {round.map((match) => {
+                    const flagCodeP1 = getFlagCode(match.p1);
+                    const flagCodeP2 = getFlagCode(match.p2);
+                    return (
+                      <div 
+                        key={match.id}
+                        style={{ 
+                          position: 'absolute',
+                          top: `${match.y}px`,
+                          left: 0,
+                          width: '260px',
+                          height: `${CARD_H}px`
+                        }}
+                      >
+                        <div className="match-card" style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
+                          <div className="match-info-bar" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Match {match.matchNo}</span>
+                            {match.status === 'completed' && <span className="badge badge-blue">{match.winType}</span>}
+                          </div>
+                          
+                          {/* Blue corner */}
+                          <div className="match-competitor blue-corner" style={{ display: 'flex', alignItems: 'center', height: '28px', borderBottom: '1px solid var(--border-color)', padding: '0 0.5rem' }}>
+                            <span style={{ flex: 1, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {match.p1 ? match.p1.name : getFeedingPlaceholder(true, match)}
+                            </span>
+                            {match.p1 && flagCodeP1 && (
+                              <img src={`https://flagcdn.com/w40/${flagCodeP1}.png`} style={{ width: '14px', height: '9px', objectFit: 'cover' }} />
+                            )}
+                            {match.status === 'completed' && <span style={{ marginLeft: '0.5rem', fontWeight: 'bold' }}>{match.score1}</span>}
+                          </div>
+
+                          {/* Red corner */}
+                          <div className="match-competitor red-corner" style={{ display: 'flex', alignItems: 'center', height: '28px', padding: '0 0.5rem' }}>
+                            <span style={{ flex: 1, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {match.p2 ? match.p2.name : getFeedingPlaceholder(false, match)}
+                            </span>
+                            {match.p2 && flagCodeP2 && (
+                              <img src={`https://flagcdn.com/w40/${flagCodeP2}.png`} style={{ width: '14px', height: '9px', objectFit: 'cover' }} />
+                            )}
+                            {match.status === 'completed' && <span style={{ marginLeft: '0.5rem', fontWeight: 'bold' }}>{match.score2}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+
+              {/* Standing Box - ONLY rendered on the Finals sheet */}
+              {page.name === "Finals & Semifinals" && podium && (
+                <div 
+                  className="standings-box" 
+                  style={{ 
+                    position: 'absolute',
+                    top: `${MARGIN + HEADER}px`,
+                    left: `${MARGIN + 2 * COL_STEP}px`,
+                    width: '260px', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '6px', 
+                    backgroundColor: 'white',
+                    overflow: 'hidden',
+                    boxShadow: 'var(--shadow-sm)',
+                    zIndex: 10
+                  }}
+                >
+                  <table className="custom-table" style={{ fontSize: '0.8rem' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ width: '45px', fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>1st</td>
+                        <td style={{ padding: '0.4rem 0.75rem', fontWeight: podium.first ? 'bold' : 'normal' }}>
+                          {podium.first?.name || ''}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>2nd</td>
+                        <td style={{ padding: '0.4rem 0.75rem' }}>
+                          {podium.second?.name || ''}
+                        </td>
+                      </tr>
+                      {numSemiMatches >= 1 && (
+                        <tr>
+                          <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
+                          <td style={{ padding: '0.4rem 0.75rem' }}>
+                            {podium.bronze1?.name || ''}
+                          </td>
+                        </tr>
+                      )}
+                      {numSemiMatches >= 2 && (
+                        <tr>
+                          <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
+                          <td style={{ padding: '0.4rem 0.75rem' }}>
+                            {podium.bronze2?.name || ''}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Main Bracket Scoring Modal */}
       {selectedMatch && (
