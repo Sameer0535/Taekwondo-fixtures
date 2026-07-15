@@ -305,6 +305,8 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   };
 
   const podium = getPodium();
+  const semiRound = rounds[rounds.length - 2];
+  const numSemiMatches = semiRound ? semiRound.filter(m => m.status !== 'walkover').length : 0;
 
 
 
@@ -582,19 +584,19 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                     {podium.second?.name || ''}
                   </td>
                 </tr>
-                {podium.bronze1 && (
+                {numSemiMatches >= 1 && (
                   <tr>
                     <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
                     <td style={{ padding: '0.4rem 0.75rem' }}>
-                      {podium.bronze1.name}
+                      {podium.bronze1?.name || ''}
                     </td>
                   </tr>
                 )}
-                {podium.bronze2 && (
+                {numSemiMatches >= 2 && (
                   <tr>
                     <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
                     <td style={{ padding: '0.4rem 0.75rem' }}>
-                      {podium.bronze2.name}
+                      {podium.bronze2?.name || ''}
                     </td>
                   </tr>
                 )}
@@ -627,19 +629,19 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                     {podium.second?.name || ''}
                   </td>
                 </tr>
-                {podium.bronze1 && (
+                {numSemiMatches >= 1 && (
                   <tr>
                     <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
                     <td style={{ padding: '0.4rem 0.75rem' }}>
-                      {podium.bronze1.name}
+                      {podium.bronze1?.name || ''}
                     </td>
                   </tr>
                 )}
-                {podium.bronze2 && (
+                {numSemiMatches >= 2 && (
                   <tr>
                     <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
                     <td style={{ padding: '0.4rem 0.75rem' }}>
-                      {podium.bronze2.name}
+                      {podium.bronze2?.name || ''}
                     </td>
                   </tr>
                 )}
