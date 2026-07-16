@@ -312,19 +312,19 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
 
   // ── Compact print-specific layout constants ──
   // These are smaller than the screen constants so the bracket fills a landscape A4 page at readable size.
-  const P_CARD_H = 40;      // 8px info + 16px blue + 16px red
-  const P_GAP = 2;
-  const P_SLOT = P_CARD_H + P_GAP;  // 42px
+  const P_CARD_H = 50;      // 12px info + 18px blue + 18px red (with borders, fits exactly 50px)
+  const P_GAP = 6;
+  const P_SLOT = P_CARD_H + P_GAP;  // 56px
   const P_COL_W = 160;
   const P_COL_GAP = 20;
   const P_COL_STEP = P_COL_W + P_COL_GAP; // 180px
   const P_MARGIN = 8;
   const P_HEADER = 18;
-  const P_INFO_BAR_H = 8;
-  const P_ROW_H = 16;
-  const P_CARD_MID = P_CARD_H / 2;
-  const P_BLUE_MID = P_INFO_BAR_H + P_ROW_H / 2;
-  const P_RED_MID = P_INFO_BAR_H + P_ROW_H + P_ROW_H / 2;
+  const P_INFO_BAR_H = 12;
+  const P_ROW_H = 18;
+  const P_CARD_MID = P_CARD_H / 2; // 25
+  const P_BLUE_MID = P_INFO_BAR_H + P_ROW_H / 2; // 12 + 9 = 21
+  const P_RED_MID = P_INFO_BAR_H + P_ROW_H + P_ROW_H / 2; // 12 + 18 + 9 = 39
 
   const printPages = useMemo(() => {
     if (!isLargeBracket) return [];
@@ -806,21 +806,27 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                           width: `${P_COL_W}px`, height: `${P_CARD_H}px`
                         }}
                       >
-                        <div style={{ border: '1px solid #cbd5e1', borderRadius: '3px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
-                          <div style={{ height: `${P_INFO_BAR_H}px`, padding: '0 4px', fontSize: '0.4rem', backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#64748b' }}>
+                        <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
+                          {/* Info bar */}
+                          <div style={{ height: `${P_INFO_BAR_H}px`, padding: '0 6px', fontSize: '0.5rem', backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#475569', fontWeight: 'bold' }}>
                             <span>M{match.matchNo}</span>
+                            {match.status === 'completed' && <span style={{ fontSize: '0.4rem', textTransform: 'uppercase' }}>{match.winType}</span>}
                           </div>
-                          <div style={{ height: `${P_ROW_H}px`, padding: '0 4px', fontSize: '0.5rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white' }}>
-                            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? 'bold' : 'normal' }}>
+                          {/* Blue corner */}
+                          <div style={{ height: `${P_ROW_H}px`, padding: '0 6px 0 8px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', position: 'relative', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white' }}>
+                            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#2563eb' }}></div>
+                            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '500', color: '#0f172a' }}>
                               {match.p1 ? match.p1.name : (match.feedsFrom ? `W${match.feedsFrom.blue}` : 'TBD')}
                             </span>
-                            {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '2px' }}>{match.score1}</span>}
+                            {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#2563eb' }}>{match.score1}</span>}
                           </div>
-                          <div style={{ height: `${P_ROW_H}px`, padding: '0 4px', fontSize: '0.5rem', display: 'flex', alignItems: 'center', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white' }}>
-                            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? 'bold' : 'normal' }}>
+                          {/* Red corner */}
+                          <div style={{ height: `${P_ROW_H}px`, padding: '0 6px 0 8px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', position: 'relative', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white' }}>
+                            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#dc2626' }}></div>
+                            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '500', color: '#0f172a' }}>
                               {match.p2 ? match.p2.name : (match.feedsFrom ? `W${match.feedsFrom.red}` : 'TBD')}
                             </span>
-                            {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '2px' }}>{match.score2}</span>}
+                            {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#dc2626' }}>{match.score2}</span>}
                           </div>
                         </div>
                       </div>

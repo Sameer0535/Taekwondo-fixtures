@@ -816,8 +816,6 @@ body {
   }
   .print-only-page {
     display: block !important;
-    page-break-after: always;
-    break-after: page;
     position: relative;
     width: 1040px !important;
     height: 680px !important;
@@ -826,6 +824,10 @@ body {
     padding: 20px !important;
     background-color: white !important;
     overflow: hidden !important;
+  }
+  .print-only-page:not(:last-of-type) {
+    page-break-after: always;
+    break-after: page;
   }
   .print-round-header {
     font-weight: bold;
