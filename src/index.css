@@ -838,8 +838,14 @@ body {
   }
 }
 
-.print-only-page {
+.print-only-page, .print-only-header {
   display: none;
+}
+
+@media print {
+  .print-only-header {
+    display: block !important;
+  }
 }
 
 /* Disable CSS-based connection lines in favor of perfect dynamic SVG overlay lines */

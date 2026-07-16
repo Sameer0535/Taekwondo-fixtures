@@ -402,8 +402,8 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
     const finals = layoutPool(finalsData);
 
     return [
-      { name: "Pool A (Top Half)", ...poolA },
-      { name: "Pool B (Bottom Half)", ...poolB },
+      { name: "Pool A", ...poolA },
+      { name: "Pool B", ...poolB },
       { name: "Finals & Semifinals", ...finals, isFinals: true }
     ];
   }, [processedRounds, isLargeBracket, rounds]);
@@ -473,6 +473,15 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
           <button className="btn btn-primary btn-sm" onClick={() => window.print()}>Print / Save PDF</button>
         </div>
       </div>
+
+      {/* Print-only header for small brackets */}
+      {!isLargeBracket && (
+        <div className="print-only-header" style={{ marginBottom: '1rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--primary)' }}>
+            {divisionName}
+          </h2>
+        </div>
+      )}
 
       {/* Main Bracket Canvas */}
       <div 
