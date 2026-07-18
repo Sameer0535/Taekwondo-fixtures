@@ -267,7 +267,8 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   // Helper to calculate feeding placeholder labels (e.g. W1, W12)
   const getFeedingPlaceholder = (isP1, match) => {
     if (match.roundIndex === 0) return 'TBD';
-    const feedingMatchIndex = match.matchIndex * 2 + (isP1 ? 0 : 1);
+    const mIdx = match.originalMatchIndex !== undefined ? match.originalMatchIndex : match.matchIndex;
+    const feedingMatchIndex = mIdx * 2 + (isP1 ? 0 : 1);
     const feedingMatch = rounds[match.roundIndex - 1]?.[feedingMatchIndex];
     return feedingMatch ? `W${feedingMatch.matchNo}` : 'TBD';
   };
@@ -386,18 +387,18 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
     for (let r = 0; r < totalRounds - 2; r++) {
       const rnd = processedRounds[r];
       const half = rnd.length / 2;
-      // Re-index matchIndex for Pool A starting from 0
-      poolARoundData.push(rnd.slice(0, half).map((m, i) => ({ ...m, matchIndex: i })));
-      // Re-index matchIndex for Pool B starting from 0
-      poolBRoundData.push(rnd.slice(half).map((m, i) => ({ ...m, matchIndex: i })));
+      // Re-index matchIndex for Pool A starting from 0, preserving originalMatchIndex
+      poolARoundData.push(rnd.slice(0, half).map((m, i) => ({ ...m, originalMatchIndex: m.matchIndex, matchIndex: i })));
+      // Re-index matchIndex for Pool B starting from 0, preserving originalMatchIndex
+      poolBRoundData.push(rnd.slice(half).map((m, i) => ({ ...m, originalMatchIndex: m.matchIndex, matchIndex: i })));
     }
 
     const poolA = layoutPool(poolARoundData);
     const poolB = layoutPool(poolBRoundData);
 
-    // Finals: Semifinals + Final with compact layout
-    const semiMatches = processedRounds[totalRounds - 2].map((m, i) => ({ ...m, matchIndex: i }));
-    const finalMatch = { ...processedRounds[totalRounds - 1][0], matchIndex: 0 };
+    // Finals: Semifinals + Final with compact layout, preserving originalMatchIndex
+    const semiMatches = processedRounds[totalRounds - 2].map((m, i) => ({ ...m, originalMatchIndex: m.matchIndex, matchIndex: i }));
+    const finalMatch = { ...processedRounds[totalRounds - 1][0], originalMatchIndex: processedRounds[totalRounds - 1][0].matchIndex, matchIndex: 0 };
     const finalsData = [[...semiMatches], [finalMatch]];
     const finals = layoutPool(finalsData);
 
@@ -825,7 +826,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                           <div style={{ height: `${P_ROW_H}px`, padding: '0 6px 0 8px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', position: 'relative', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white' }}>
                             <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#2563eb' }}></div>
                             <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '500', color: '#0f172a' }}>
-                              {match.p1 ? match.p1.name : (match.feedsFrom ? `W${match.feedsFrom.blue}` : 'TBD')}
+                              {match.p1 ? match.p1.name : getFeedingPlaceholder(true, match)}
                             </span>
                             {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#2563eb' }}>{match.score1}</span>}
                           </div>
@@ -833,7 +834,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                           <div style={{ height: `${P_ROW_H}px`, padding: '0 6px 0 8px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', position: 'relative', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white' }}>
                             <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#dc2626' }}></div>
                             <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '500', color: '#0f172a' }}>
-                              {match.p2 ? match.p2.name : (match.feedsFrom ? `W${match.feedsFrom.red}` : 'TBD')}
+                              {match.p2 ? match.p2.name : getFeedingPlaceholder(false, match)}
                             </span>
                             {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#dc2626' }}>{match.score2}</span>}
                           </div>
