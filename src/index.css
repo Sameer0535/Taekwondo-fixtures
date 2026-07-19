@@ -866,6 +866,9 @@ body {
     text-transform: uppercase;
     margin-bottom: 0.5rem;
   }
+  .draggable-comp::after {
+    display: none !important;
+  }
 }
 
 .print-only-page, .print-only-header {
