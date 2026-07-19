@@ -201,8 +201,8 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   const isBracketStarted = rounds.some(round => round.some(m => m.status === 'completed'));
   const isDragEnabled = !isBracketStarted;
 
-  const handleDragStart = (e, matchId, playerKey) => {
-    e.dataTransfer.setData("application/json", JSON.stringify({ matchId, playerKey }));
+  const handleDragStart = (e, competitorId) => {
+    e.dataTransfer.setData("application/json", JSON.stringify({ competitorId }));
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -210,35 +210,47 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
     e.preventDefault();
   };
 
-  const handleDrop = (e, targetMatchId, targetPlayerKey) => {
+  const handleDrop = (e, targetCompetitorId) => {
     e.preventDefault();
     if (!isDragEnabled) return;
 
     try {
       const dataStr = e.dataTransfer.getData("application/json");
       if (!dataStr) return;
-      const { matchId: sourceMatchId, playerKey: sourcePlayerKey } = JSON.parse(dataStr);
+      const { competitorId: sourceCompetitorId } = JSON.parse(dataStr);
 
-      if (sourceMatchId === targetMatchId && sourcePlayerKey === targetPlayerKey) return;
+      if (sourceCompetitorId === targetCompetitorId) return;
 
       setBrackets(prev => {
         const currentRounds = prev[divisionId];
         // Clone bracket state
         const clonedRounds = JSON.parse(JSON.stringify(currentRounds));
-        
-        // Find source and target match objects in Round 0
         const round0 = clonedRounds[0];
-        const sourceMatch = round0.find(m => m.id === sourceMatchId);
-        const targetMatch = round0.find(m => m.id === targetMatchId);
 
-        if (!sourceMatch || !targetMatch) return prev;
+        // Find original Round 0 slots for both competitor IDs
+        const findSlot = (compId) => {
+          for (const m of round0) {
+            if (m.p1 && m.p1.id === compId) {
+              return { match: m, key: 'p1' };
+            }
+            if (m.p2 && m.p2.id === compId) {
+              return { match: m, key: 'p2' };
+            }
+          }
+          return null;
+        };
 
-        // Perform the swap of competitor objects
-        const sourcePlayer = sourceMatch[sourcePlayerKey];
-        const targetPlayer = targetMatch[targetPlayerKey];
+        const sourceSlot = findSlot(sourceCompetitorId);
+        const targetSlot = findSlot(targetCompetitorId);
 
-        sourceMatch[sourcePlayerKey] = targetPlayer;
-        targetMatch[targetPlayerKey] = sourcePlayer;
+        if (!sourceSlot || !targetSlot) return prev;
+
+        // Perform the swap of competitor objects in their original Round 0 matches
+        const sourcePlayer = sourceSlot.match[sourceSlot.key];
+        const targetPlayer = targetSlot.match[targetSlot.key];
+
+        sourceSlot.match[sourceSlot.key] = targetPlayer;
+        targetSlot.match[targetSlot.key] = sourcePlayer;
 
         // Rebuild walkovers, active fight numbers, and propagate
         rebuildBracketState(clonedRounds);
@@ -657,13 +669,13 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                       <>
                         {/* Blue Corner Row */}
                         <div 
-                          className={`${getCompetitorClass(match, match.p1, 'blue')} ${isDragEnabled && match.roundIndex === 0 ? 'draggable-comp' : ''}`}
+                          className={`${getCompetitorClass(match, match.p1, 'blue')} ${isDragEnabled && match.p1 !== null ? 'draggable-comp' : ''}`}
                           onMouseEnter={() => match.p1 && setHoveredCompetitorId(match.p1.id)}
                           onMouseLeave={() => setHoveredCompetitorId(null)}
-                          draggable={isDragEnabled && match.roundIndex === 0 && match.p1 !== null}
-                          onDragStart={isDragEnabled && match.roundIndex === 0 ? (e) => handleDragStart(e, match.id, 'p1') : undefined}
-                          onDragOver={isDragEnabled && match.roundIndex === 0 ? handleDragOver : undefined}
-                          onDrop={isDragEnabled && match.roundIndex === 0 ? (e) => handleDrop(e, match.id, 'p1') : undefined}
+                          draggable={isDragEnabled && match.p1 !== null}
+                          onDragStart={isDragEnabled && match.p1 !== null ? (e) => handleDragStart(e, match.p1.id) : undefined}
+                          onDragOver={isDragEnabled ? handleDragOver : undefined}
+                          onDrop={isDragEnabled && match.p1 !== null ? (e) => handleDrop(e, match.p1.id) : undefined}
                         >
                           <div className="comp-bar blue-bar"></div>
                           
@@ -691,13 +703,13 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
 
                         {/* Red Corner Row */}
                         <div 
-                          className={`${getCompetitorClass(match, match.p2, 'red')} ${isDragEnabled && match.roundIndex === 0 ? 'draggable-comp' : ''}`}
+                          className={`${getCompetitorClass(match, match.p2, 'red')} ${isDragEnabled && match.p2 !== null ? 'draggable-comp' : ''}`}
                           onMouseEnter={() => match.p2 && setHoveredCompetitorId(match.p2.id)}
                           onMouseLeave={() => setHoveredCompetitorId(null)}
-                          draggable={isDragEnabled && match.roundIndex === 0 && match.p2 !== null}
-                          onDragStart={isDragEnabled && match.roundIndex === 0 ? (e) => handleDragStart(e, match.id, 'p2') : undefined}
-                          onDragOver={isDragEnabled && match.roundIndex === 0 ? handleDragOver : undefined}
-                          onDrop={isDragEnabled && match.roundIndex === 0 ? (e) => handleDrop(e, match.id, 'p2') : undefined}
+                          draggable={isDragEnabled && match.p2 !== null}
+                          onDragStart={isDragEnabled && match.p2 !== null ? (e) => handleDragStart(e, match.p2.id) : undefined}
+                          onDragOver={isDragEnabled ? handleDragOver : undefined}
+                          onDrop={isDragEnabled && match.p2 !== null ? (e) => handleDrop(e, match.p2.id) : undefined}
                         >
                           <div className="comp-bar red-bar"></div>
                           
