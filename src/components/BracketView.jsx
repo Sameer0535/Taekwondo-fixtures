@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import MatchModal from './MatchModal';
-import { updateMatchScore, assignActiveMatchNumbers } from '../utils/bracketBuilder';
+import { updateMatchScore, assignActiveMatchNumbers, rebuildBracketState } from '../utils/bracketBuilder';
 import { nocToIso } from '../utils/countries';
 
 // Helper to draw a perfect step path with rounded corners
@@ -195,6 +195,63 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
     });
     
     setSelectedMatch(null);
+  };
+
+  // Drag and Drop Player Seeding Swap Handlers
+  const isBracketStarted = rounds.some(round => round.some(m => m.status === 'completed'));
+  const isDragEnabled = !isBracketStarted;
+
+  const handleDragStart = (e, matchId, playerKey) => {
+    e.dataTransfer.setData("application/json", JSON.stringify({ matchId, playerKey }));
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, targetMatchId, targetPlayerKey) => {
+    e.preventDefault();
+    if (!isDragEnabled) return;
+
+    try {
+      const dataStr = e.dataTransfer.getData("application/json");
+      if (!dataStr) return;
+      const { matchId: sourceMatchId, playerKey: sourcePlayerKey } = JSON.parse(dataStr);
+
+      if (sourceMatchId === targetMatchId && sourcePlayerKey === targetPlayerKey) return;
+
+      setBrackets(prev => {
+        const currentRounds = prev[divisionId];
+        // Clone bracket state
+        const clonedRounds = JSON.parse(JSON.stringify(currentRounds));
+        
+        // Find source and target match objects in Round 0
+        const round0 = clonedRounds[0];
+        const sourceMatch = round0.find(m => m.id === sourceMatchId);
+        const targetMatch = round0.find(m => m.id === targetMatchId);
+
+        if (!sourceMatch || !targetMatch) return prev;
+
+        // Perform the swap of competitor objects
+        const sourcePlayer = sourceMatch[sourcePlayerKey];
+        const targetPlayer = targetMatch[targetPlayerKey];
+
+        sourceMatch[sourcePlayerKey] = targetPlayer;
+        targetMatch[targetPlayerKey] = sourcePlayer;
+
+        // Rebuild walkovers, active fight numbers, and propagate
+        rebuildBracketState(clonedRounds);
+        assignActiveMatchNumbers(clonedRounds);
+
+        return {
+          ...prev,
+          [divisionId]: clonedRounds
+        };
+      });
+    } catch (err) {
+      console.error("Drag and drop swap failed", err);
+    }
   };
 
   // Get names of rounds (matching the screenshot style)
@@ -600,9 +657,13 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                       <>
                         {/* Blue Corner Row */}
                         <div 
-                          className={getCompetitorClass(match, match.p1, 'blue')}
+                          className={`${getCompetitorClass(match, match.p1, 'blue')} ${isDragEnabled && match.roundIndex === 0 ? 'draggable-comp' : ''}`}
                           onMouseEnter={() => match.p1 && setHoveredCompetitorId(match.p1.id)}
                           onMouseLeave={() => setHoveredCompetitorId(null)}
+                          draggable={isDragEnabled && match.roundIndex === 0 && match.p1 !== null}
+                          onDragStart={isDragEnabled && match.roundIndex === 0 ? (e) => handleDragStart(e, match.id, 'p1') : undefined}
+                          onDragOver={isDragEnabled && match.roundIndex === 0 ? handleDragOver : undefined}
+                          onDrop={isDragEnabled && match.roundIndex === 0 ? (e) => handleDrop(e, match.id, 'p1') : undefined}
                         >
                           <div className="comp-bar blue-bar"></div>
                           
@@ -630,9 +691,13 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
 
                         {/* Red Corner Row */}
                         <div 
-                          className={getCompetitorClass(match, match.p2, 'red')}
+                          className={`${getCompetitorClass(match, match.p2, 'red')} ${isDragEnabled && match.roundIndex === 0 ? 'draggable-comp' : ''}`}
                           onMouseEnter={() => match.p2 && setHoveredCompetitorId(match.p2.id)}
                           onMouseLeave={() => setHoveredCompetitorId(null)}
+                          draggable={isDragEnabled && match.roundIndex === 0 && match.p2 !== null}
+                          onDragStart={isDragEnabled && match.roundIndex === 0 ? (e) => handleDragStart(e, match.id, 'p2') : undefined}
+                          onDragOver={isDragEnabled && match.roundIndex === 0 ? handleDragOver : undefined}
+                          onDrop={isDragEnabled && match.roundIndex === 0 ? (e) => handleDrop(e, match.id, 'p2') : undefined}
                         >
                           <div className="comp-bar red-bar"></div>
                           
