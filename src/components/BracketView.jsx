@@ -406,37 +406,32 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
     // Helper: lay out a sub-bracket from scratch with compact coordinates
     const layoutPool = (matchesByRound) => {
       const laid = matchesByRound.map(round => round.map(m => ({ ...m })));
-      // Position round 0 leaves compactly starting from top margin
-      let activeLeafIndex = 0;
+      // Position round 0 leaves
       for (let i = 0; i < laid[0].length; i++) {
-        const m = laid[0][i];
-        if (!m.p1 && !m.p2) {
-          m.py = P_MARGIN + P_HEADER + activeLeafIndex * P_SLOT;
-        } else {
-          m.py = P_MARGIN + P_HEADER + activeLeafIndex * P_SLOT;
-          activeLeafIndex++;
-        }
+        laid[0][i].py = P_MARGIN + P_HEADER + i * P_SLOT;
       }
-      // Position parent rounds using feeder slot alignment
+      // Center parent rounds matching active vs walkover feeder logic
       for (let r = 1; r < laid.length; r++) {
         for (let m = 0; m < laid[r].length; m++) {
-          const top = laid[r - 1][m * 2];
-          const bot = laid[r - 1][m * 2 + 1];
+          const topChild = laid[r - 1][m * 2];
+          const botChild = laid[r - 1][m * 2 + 1];
 
-          const topHasCard = top && (top.p1 || top.p2 || r - 1 > 0);
-          const botHasCard = bot && (bot.p1 || bot.p2 || r - 1 > 0);
-
-          if (topHasCard && botHasCard) {
-            // Both feeders exist - center parent between them
-            laid[r][m].py = (top.py + bot.py) / 2;
-          } else if (topHasCard) {
-            // Only top feeder exists - align parent's blue slot with top's center
-            laid[r][m].py = top.py + P_CARD_MID - P_BLUE_MID;
-          } else if (botHasCard) {
-            // Only bot feeder exists - align parent's red slot with bot's center
-            laid[r][m].py = bot.py + P_CARD_MID - P_RED_MID;
-          } else {
+          if (!topChild || !botChild) {
             laid[r][m].py = P_MARGIN + P_HEADER + m * P_SLOT * Math.pow(2, r);
+            continue;
+          }
+
+          const topActive = topChild.status !== 'walkover';
+          const botActive = botChild.status !== 'walkover';
+
+          if (topActive && botActive) {
+            laid[r][m].py = (topChild.py + botChild.py) / 2;
+          } else if (topActive && !botActive) {
+            laid[r][m].py = topChild.py;
+          } else if (!topActive && botActive) {
+            laid[r][m].py = botChild.py;
+          } else {
+            laid[r][m].py = (topChild.py + botChild.py) / 2;
           }
         }
       }
@@ -444,14 +439,11 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
       const lines = [];
       for (let r = 0; r < laid.length - 1; r++) {
         for (const match of laid[r]) {
-          const matchHasCard = match.p1 || match.p2 || r > 0;
-          if (!matchHasCard) continue;
-
+          if (r === 0 && match.status === 'walkover') continue;
           const isTop = match.matchIndex % 2 === 0;
           const nextIdx = Math.floor(match.matchIndex / 2);
           const next = laid[r + 1][nextIdx];
           if (!next) continue;
-
           const x1 = P_MARGIN + r * P_COL_STEP + P_COL_W;
           const x2 = P_MARGIN + (r + 1) * P_COL_STEP;
           const y1 = match.py + P_CARD_MID;
@@ -899,7 +891,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                   </div>
 
                   {round.map((match) => {
-                    if (!match.p1 && !match.p2 && rIndex === 0) return null;
+                    if (rIndex === 0 && match.status === 'walkover') return null;
                     const flagCodeP1 = getFlagCode(match.p1);
                     const flagCodeP2 = getFlagCode(match.p2);
                     return (
@@ -921,8 +913,8 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                           <div style={{ height: `${P_ROW_H}px`, padding: '1px 6px 1px 8px', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', position: 'relative', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white', boxSizing: 'border-box' }}>
                             <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#2563eb' }}></div>
                             <div style={{ flex: 1, overflow: 'hidden', paddingRight: '4px' }}>
-                              <div style={{ fontSize: '0.62rem', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '600', color: match.p1 ? '#0f172a' : '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
-                                {match.p1 ? match.p1.name : (rIndex === 0 ? "BYE" : getFeedingPlaceholder(true, match))}
+                              <div style={{ fontSize: '0.62rem', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '600', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
+                                {match.p1 ? match.p1.name : getFeedingPlaceholder(true, match)}
                               </div>
                               {match.p1?.club && (
                                 <div style={{ fontSize: '0.48rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
@@ -950,8 +942,8 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                           <div style={{ height: `${P_ROW_H}px`, padding: '1px 6px 1px 8px', display: 'flex', alignItems: 'center', position: 'relative', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white', boxSizing: 'border-box' }}>
                             <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#dc2626' }}></div>
                             <div style={{ flex: 1, overflow: 'hidden', paddingRight: '4px' }}>
-                              <div style={{ fontSize: '0.62rem', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '600', color: match.p2 ? '#0f172a' : '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
-                                {match.p2 ? match.p2.name : (rIndex === 0 ? "BYE" : getFeedingPlaceholder(false, match))}
+                              <div style={{ fontSize: '0.62rem', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '600', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
+                                {match.p2 ? match.p2.name : getFeedingPlaceholder(false, match)}
                               </div>
                               {match.p2?.club && (
                                 <div style={{ fontSize: '0.48rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
