@@ -249,7 +249,7 @@ export function rebuildBracketState(rounds) {
   const hasCompetitorsInSubtree = (roundIdx, matchIdx) => {
     const rangeSize = Math.pow(2, roundIdx + 1);
     const startIdx = matchIdx * rangeSize;
-    for (let i = startIdx; i < startIdx + rangeSize; i++) {
+    for (let i = startIdx; i < startIdx + rangeSize && i < slots.length; i++) {
       if (slots[i] !== null && slots[i] !== undefined) {
         return true;
       }
@@ -269,71 +269,47 @@ export function rebuildBracketState(rounds) {
     }
   }
 
-  // Re-propagate from round 0 upwards
+  // Unified bottom-up pass: process each round, detect walkovers, propagate winners
   for (let r = 0; r < rounds.length; r++) {
     const currentRound = rounds[r];
     const nextRound = rounds[r + 1];
 
     for (const match of currentRound) {
-      // If Round 0 has walkovers (byes) set them
-      if (r === 0) {
-        if (match.p1 && !match.p2) {
-          match.winnerId = match.p1.id;
-          match.status = 'walkover';
-        } else if (!match.p1 && match.p2) {
-          match.winnerId = match.p2.id;
-          match.status = 'walkover';
-        } else if (!match.p1 && !match.p2) {
-          match.status = 'walkover';
-        }
-      }
-
-      // Propagate to next round if winner exists
-      if (match.winnerId && nextRound) {
-        const nextMatchIdx = Math.floor(match.matchIndex / 2);
-        const nextMatch = nextRound[nextMatchIdx];
-        const winnerObj = match.winnerId === match.p1?.id ? match.p1 : match.p2;
-
-        if (match.matchIndex % 2 === 0) {
-          nextMatch.p1 = winnerObj;
+      // Detect walkovers (byes) in this round
+      if (match.status !== 'completed') {
+        if (r === 0) {
+          // Round 0: detect direct byes
+          if (match.p1 && !match.p2) {
+            match.winnerId = match.p1.id;
+            match.status = 'walkover';
+          } else if (!match.p1 && match.p2) {
+            match.winnerId = match.p2.id;
+            match.status = 'walkover';
+          } else if (!match.p1 && !match.p2) {
+            match.status = 'walkover';
+          }
         } else {
-          nextMatch.p2 = winnerObj;
+          // Higher rounds: detect walkovers from dead-end branches
+          const feed1HasPlayers = hasCompetitorsInSubtree(r - 1, match.matchIndex * 2);
+          const feed2HasPlayers = hasCompetitorsInSubtree(r - 1, match.matchIndex * 2 + 1);
+
+          if (match.p1 && !match.p2 && !feed2HasPlayers) {
+            match.winnerId = match.p1.id;
+            match.status = 'walkover';
+          } else if (!match.p1 && match.p2 && !feed1HasPlayers) {
+            match.winnerId = match.p2.id;
+            match.status = 'walkover';
+          } else if (match.p1 && !match.p2 && feed2HasPlayers) {
+            // Still waiting for feeder — stay pending
+          } else if (!match.p1 && match.p2 && feed1HasPlayers) {
+            // Still waiting for feeder — stay pending
+          } else if (!feed1HasPlayers && !feed2HasPlayers) {
+            match.status = 'walkover';
+          }
         }
       }
-    }
-  }
 
-  // Second pass: detect walkovers in higher rounds where one side is a dead end (no players possible)
-  for (let r = 0; r < rounds.length - 1; r++) {
-    const currentRound = rounds[r];
-    const nextRound = rounds[r + 1];
-
-    for (let i = 0; i < nextRound.length; i++) {
-      const nextMatch = nextRound[i];
-      
-      const feed1HasPlayers = hasCompetitorsInSubtree(r, i * 2);
-      const feed2HasPlayers = hasCompetitorsInSubtree(r, i * 2 + 1);
-
-      if (nextMatch.status === 'pending') {
-        if (nextMatch.p1 && !feed2HasPlayers) {
-          nextMatch.winnerId = nextMatch.p1.id;
-          nextMatch.status = 'walkover';
-        } else if (nextMatch.p2 && !feed1HasPlayers) {
-          nextMatch.winnerId = nextMatch.p2.id;
-          nextMatch.status = 'walkover';
-        } else if (!feed1HasPlayers && !feed2HasPlayers) {
-          nextMatch.status = 'walkover';
-        }
-      }
-    }
-  }
-
-  // Final propagation pass for newly found higher-round walkovers
-  for (let r = 0; r < rounds.length - 1; r++) {
-    const currentRound = rounds[r];
-    const nextRound = rounds[r + 1];
-
-    for (const match of currentRound) {
+      // Propagate winner to next round immediately (so the next round iteration sees it)
       if (match.winnerId && nextRound) {
         const nextMatchIdx = Math.floor(match.matchIndex / 2);
         const nextMatch = nextRound[nextMatchIdx];
