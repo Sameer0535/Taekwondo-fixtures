@@ -472,9 +472,9 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
     const finals = layoutPool(finalsData);
 
     return [
-      { name: "Pool A", ...poolA, totalRoundsCount: totalRounds },
-      { name: "Pool B", ...poolB, totalRoundsCount: totalRounds },
-      { name: "Finals & Semifinals", ...finals, isFinals: true, totalRoundsCount: totalRounds }
+      { name: "Pool A", ...poolA },
+      { name: "Pool B", ...poolB },
+      { name: "Finals & Semifinals", ...finals, isFinals: true }
     ];
   }, [processedRounds, isLargeBracket, rounds]);
 
@@ -840,97 +840,87 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
 
       {/* Print-only split pages layout for large brackets */}
       {isLargeBracket && printPages.map((page, pIdx) => {
-        // Landscape A4 safe area: ~1000px wide, ~650px tall (accounting for margins and title)
-        const PRINT_SAFE_W = 1000;
-        const PRINT_SAFE_H = 620;
-        const scaleVal = Math.min(1.0, PRINT_SAFE_W / page.width, PRINT_SAFE_H / page.height);
-        const scaledW = page.width * scaleVal;
-        const scaledH = page.height * scaleVal;
+        const scaleVal = Math.min(1.0, 1000 / page.width, 620 / page.height);
         return (
           <div key={pIdx} className="print-only-page print-page">
-            <div style={{ marginBottom: '0.35rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.2rem' }}>
-              <h3 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--primary)' }}>
+            <div style={{ marginBottom: '0.5rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.25rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--primary)' }}>
                 {divisionName} — {page.name}
               </h3>
             </div>
             
-            {/* Wrapper div sized to the SCALED dimensions — prevents parent from clipping */}
-            <div style={{ width: `${scaledW}px`, height: `${scaledH}px`, position: 'relative', overflow: 'visible' }}>
-              <div 
-                style={{ 
-                  position: 'absolute', 
-                  top: 0,
-                  left: 0,
-                  width: `${page.width}px`, 
-                  height: `${page.height}px`,
-                  transform: `scale(${scaleVal})`,
-                  transformOrigin: 'top left'
+            <div 
+              style={{ 
+                position: 'relative', 
+                width: `${page.width}px`, 
+                height: `${page.height}px`,
+                transform: `scale(${scaleVal})`,
+                transformOrigin: 'top left'
+              }}
+            >
+              <svg 
+                style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none'
                 }}
               >
-                <svg 
+                {page.lines.map((line, idx) => (
+                  <path key={idx} d={line.d} stroke="#94a3b8" strokeWidth="1.5" fill="none" />
+                ))}
+              </svg>
+
+              {page.rounds.map((round, rIndex) => (
+                <div 
+                  key={rIndex}
                   style={{
-                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none'
+                    position: 'absolute', top: 0,
+                    left: `${P_MARGIN + rIndex * P_COL_STEP}px`,
+                    width: `${P_COL_W}px`, height: '100%'
                   }}
                 >
-                  {page.lines.map((line, idx) => (
-                    <path key={idx} d={line.d} stroke="#94a3b8" strokeWidth="1.5" fill="none" />
-                  ))}
-                </svg>
+                  <div style={{ position: 'absolute', top: `${P_MARGIN}px`, left: 0, width: '100%', fontWeight: 'bold', fontSize: '0.55rem', color: '#475569', textTransform: 'uppercase' }}>
+                    {page.isFinals
+                      ? (rIndex === 0 ? "Semifinals" : "Final") 
+                      : getRoundHeader(rIndex, processedRounds.length)}
+                  </div>
 
-                {page.rounds.map((round, rIndex) => (
-                  <div 
-                    key={rIndex}
-                    style={{
-                      position: 'absolute', top: 0,
-                      left: `${P_MARGIN + rIndex * P_COL_STEP}px`,
-                      width: `${P_COL_W}px`, height: '100%'
-                    }}
-                  >
-                    <div style={{ position: 'absolute', top: `${P_MARGIN}px`, left: 0, width: '100%', fontWeight: 'bold', fontSize: '0.55rem', color: '#475569', textTransform: 'uppercase' }}>
-                      {page.isFinals
-                        ? (rIndex === 0 ? "Semifinals" : "Final") 
-                        : getRoundHeader(rIndex, page.totalRoundsCount)}
-                    </div>
-
-                    {round.map((match) => {
-                      if (match.status === 'walkover') return null;
-                      return (
-                        <div 
-                          key={match.id}
-                          style={{ 
-                            position: 'absolute', top: `${match.py}px`, left: 0,
-                            width: `${P_COL_W}px`, height: `${P_CARD_H}px`
-                          }}
-                        >
-                          <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
-                            {/* Info bar */}
-                            <div style={{ height: `${P_INFO_BAR_H}px`, padding: '0 6px', fontSize: '0.5rem', backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#475569', fontWeight: 'bold' }}>
-                              <span>M{match.matchNo}</span>
-                              {match.status === 'completed' && <span style={{ fontSize: '0.4rem', textTransform: 'uppercase' }}>{match.winType}</span>}
-                            </div>
-                            {/* Blue corner */}
-                            <div style={{ height: `${P_ROW_H}px`, padding: '0 6px 0 8px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', position: 'relative', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white' }}>
-                              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#2563eb' }}></div>
-                              <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '500', color: '#0f172a' }}>
-                                {match.p1 ? match.p1.name : getFeedingPlaceholder(true, match)}
-                              </span>
-                              {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#2563eb' }}>{match.score1}</span>}
-                            </div>
-                            {/* Red corner */}
-                            <div style={{ height: `${P_ROW_H}px`, padding: '0 6px 0 8px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', position: 'relative', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white' }}>
-                              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#dc2626' }}></div>
-                              <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '500', color: '#0f172a' }}>
-                                {match.p2 ? match.p2.name : getFeedingPlaceholder(false, match)}
-                              </span>
-                              {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#dc2626' }}>{match.score2}</span>}
-                            </div>
+                  {round.map((match) => {
+                    if (match.status === 'walkover') return null;
+                    return (
+                      <div 
+                        key={match.id}
+                        style={{ 
+                          position: 'absolute', top: `${match.py}px`, left: 0,
+                          width: `${P_COL_W}px`, height: `${P_CARD_H}px`
+                        }}
+                      >
+                        <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
+                          {/* Info bar */}
+                          <div style={{ height: `${P_INFO_BAR_H}px`, padding: '0 6px', fontSize: '0.5rem', backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#475569', fontWeight: 'bold' }}>
+                            <span>M{match.matchNo}</span>
+                            {match.status === 'completed' && <span style={{ fontSize: '0.4rem', textTransform: 'uppercase' }}>{match.winType}</span>}
+                          </div>
+                          {/* Blue corner */}
+                          <div style={{ height: `${P_ROW_H}px`, padding: '0 6px 0 8px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', position: 'relative', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white' }}>
+                            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#2563eb' }}></div>
+                            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '500', color: '#0f172a' }}>
+                              {match.p1 ? match.p1.name : getFeedingPlaceholder(true, match)}
+                            </span>
+                            {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#2563eb' }}>{match.score1}</span>}
+                          </div>
+                          {/* Red corner */}
+                          <div style={{ height: `${P_ROW_H}px`, padding: '0 6px 0 8px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', position: 'relative', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white' }}>
+                            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#dc2626' }}></div>
+                            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '500', color: '#0f172a' }}>
+                              {match.p2 ? match.p2.name : getFeedingPlaceholder(false, match)}
+                            </span>
+                            {match.status === 'completed' && <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#dc2626' }}>{match.score2}</span>}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
 
             {/* Podium block — ONLY on Finals page, bottom-right corner */}
