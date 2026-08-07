@@ -381,20 +381,20 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   const isLargeBracket = rounds[0] && rounds[0].length > 8;
 
   // ── Compact print-specific layout constants ──
-  // Column width and step tuned so 4 columns span the full page width from left to right margin
-  const P_CARD_H = 64;      // 15px info + 24.5px blue + 24.5px red
-  const P_GAP = 7;
-  const P_SLOT = P_CARD_H + P_GAP;  // 71px
-  const P_COL_W = 245;      // Wide column width stretching bracket across full paper width
-  const P_COL_GAP = 28;
-  const P_COL_STEP = P_COL_W + P_COL_GAP; // 273px
+  // Constants tuned for zero bottom cutoff, clean right margin space, and crisp readability
+  const P_CARD_H = 60;      // 14px info + 23px blue + 23px red
+  const P_GAP = 6;
+  const P_SLOT = P_CARD_H + P_GAP;  // 66px
+  const P_COL_W = 205;      // Column width leaving a clean margin on the right side
+  const P_COL_GAP = 22;
+  const P_COL_STEP = P_COL_W + P_COL_GAP; // 227px
   const P_MARGIN = 10;
   const P_HEADER = 20;
-  const P_INFO_BAR_H = 15;
-  const P_ROW_H = 24.5;
-  const P_CARD_MID = P_CARD_H / 2; // 32
-  const P_BLUE_MID = P_INFO_BAR_H + P_ROW_H / 2; // 15 + 12.25 = 27.25
-  const P_RED_MID = P_INFO_BAR_H + P_ROW_H + P_ROW_H / 2; // 15 + 24.5 + 12.25 = 51.75
+  const P_INFO_BAR_H = 14;
+  const P_ROW_H = 23;
+  const P_CARD_MID = P_CARD_H / 2; // 30
+  const P_BLUE_MID = P_INFO_BAR_H + P_ROW_H / 2; // 14 + 11.5 = 25.5
+  const P_RED_MID = P_INFO_BAR_H + P_ROW_H + P_ROW_H / 2; // 14 + 23 + 11.5 = 48.5
 
   const printPages = useMemo(() => {
     if (!isLargeBracket) return [];
@@ -480,9 +480,9 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
     const finals = layoutPool(finalsData);
 
     return [
-      { name: "Pool A", ...poolA },
-      { name: "Pool B", ...poolB },
-      { name: "Finals & Semifinals", ...finals, isFinals: true }
+      { name: "Pool A", ...poolA, totalRoundsCount: totalRounds },
+      { name: "Pool B", ...poolB, totalRoundsCount: totalRounds },
+      { name: "Finals & Semifinals", ...finals, isFinals: true, totalRoundsCount: totalRounds }
     ];
   }, [processedRounds, isLargeBracket, rounds]);
 
@@ -849,8 +849,8 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
       {/* Print-only split pages layout for large brackets */}
       {isLargeBracket && printPages.map((page, pIdx) => {
         // Safe printable area in landscape A4 paper
-        const PRINT_SAFE_W = 1120;
-        const PRINT_SAFE_H = 700;
+        const PRINT_SAFE_W = 980;
+        const PRINT_SAFE_H = 650;
         const scaleVal = Math.min(1.0, PRINT_SAFE_W / page.width, PRINT_SAFE_H / page.height);
         return (
           <div key={pIdx} className="print-only-page print-page">
