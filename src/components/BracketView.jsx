@@ -381,20 +381,20 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   const isLargeBracket = rounds[0] && rounds[0].length > 8;
 
   // ── Compact print-specific layout constants ──
-  // Height tuned to fit full match card details (info header, player names, academy/club lines, country flags)
-  const P_CARD_H = 62;      // 14px info + 24px blue + 24px red (fits name + club line + flag)
-  const P_GAP = 6;
-  const P_SLOT = P_CARD_H + P_GAP;  // 68px
-  const P_COL_W = 180;
-  const P_COL_GAP = 20;
-  const P_COL_STEP = P_COL_W + P_COL_GAP; // 200px
-  const P_MARGIN = 8;
-  const P_HEADER = 18;
-  const P_INFO_BAR_H = 14;
-  const P_ROW_H = 24;
-  const P_CARD_MID = P_CARD_H / 2; // 31
-  const P_BLUE_MID = P_INFO_BAR_H + P_ROW_H / 2; // 14 + 12 = 26
-  const P_RED_MID = P_INFO_BAR_H + P_ROW_H + P_ROW_H / 2; // 14 + 24 + 12 = 50
+  // Column width and step tuned so 4 columns span the full page width from left to right margin
+  const P_CARD_H = 64;      // 15px info + 24.5px blue + 24.5px red
+  const P_GAP = 7;
+  const P_SLOT = P_CARD_H + P_GAP;  // 71px
+  const P_COL_W = 245;      // Wide column width stretching bracket across full paper width
+  const P_COL_GAP = 28;
+  const P_COL_STEP = P_COL_W + P_COL_GAP; // 273px
+  const P_MARGIN = 10;
+  const P_HEADER = 20;
+  const P_INFO_BAR_H = 15;
+  const P_ROW_H = 24.5;
+  const P_CARD_MID = P_CARD_H / 2; // 32
+  const P_BLUE_MID = P_INFO_BAR_H + P_ROW_H / 2; // 15 + 12.25 = 27.25
+  const P_RED_MID = P_INFO_BAR_H + P_ROW_H + P_ROW_H / 2; // 15 + 24.5 + 12.25 = 51.75
 
   const printPages = useMemo(() => {
     if (!isLargeBracket) return [];
@@ -848,11 +848,14 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
 
       {/* Print-only split pages layout for large brackets */}
       {isLargeBracket && printPages.map((page, pIdx) => {
-        const scaleVal = Math.min(1.0, 1000 / page.width, 620 / page.height);
+        // Safe printable area in landscape A4 paper
+        const PRINT_SAFE_W = 1120;
+        const PRINT_SAFE_H = 700;
+        const scaleVal = Math.min(1.0, PRINT_SAFE_W / page.width, PRINT_SAFE_H / page.height);
         return (
           <div key={pIdx} className="print-only-page print-page">
-            <div style={{ marginBottom: '0.5rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.25rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--primary)' }}>
+            <div style={{ marginBottom: '0.4rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.2rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--primary)', fontWeight: 'bold' }}>
                 {divisionName} — {page.name}
               </h3>
             </div>
@@ -872,7 +875,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                 }}
               >
                 {page.lines.map((line, idx) => (
-                  <path key={idx} d={line.d} stroke="#94a3b8" strokeWidth="1.5" fill="none" />
+                  <path key={idx} d={line.d} stroke="#94a3b8" strokeWidth="1.75" fill="none" />
                 ))}
               </svg>
 
@@ -885,10 +888,10 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                     width: `${P_COL_W}px`, height: '100%'
                   }}
                 >
-                  <div style={{ position: 'absolute', top: `${P_MARGIN}px`, left: 0, width: '100%', fontWeight: 'bold', fontSize: '0.55rem', color: '#475569', textTransform: 'uppercase' }}>
+                  <div style={{ position: 'absolute', top: `${P_MARGIN}px`, left: 0, width: '100%', fontWeight: 'bold', fontSize: '0.66rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {page.isFinals
                       ? (rIndex === 0 ? "Semifinals" : "Final") 
-                      : getRoundHeader(rIndex, processedRounds.length)}
+                      : getRoundHeader(rIndex, page.totalRoundsCount)}
                   </div>
 
                   {round.map((match) => {
@@ -903,68 +906,68 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                           width: `${P_COL_W}px`, height: `${P_CARD_H}px`
                         }}
                       >
-                        <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
+                        <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
                           {/* Info bar: Match # • Round */}
-                          <div style={{ height: `${P_INFO_BAR_H}px`, padding: '0 6px', fontSize: '0.52rem', backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#475569', fontWeight: 'bold' }}>
+                          <div style={{ height: `${P_INFO_BAR_H}px`, padding: '0 8px', fontSize: '0.55rem', backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#334155', fontWeight: 'bold' }}>
                             <span>Match {match.matchNo} • {getRoundHeader(match.roundIndex, processedRounds.length)}</span>
-                            {match.status === 'completed' && <span style={{ fontSize: '0.4rem', textTransform: 'uppercase' }}>{match.winType}</span>}
+                            {match.status === 'completed' && <span style={{ fontSize: '0.45rem', textTransform: 'uppercase' }}>{match.winType}</span>}
                           </div>
 
                           {/* Blue corner */}
-                          <div style={{ height: `${P_ROW_H}px`, padding: '1px 6px 1px 8px', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', position: 'relative', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white', boxSizing: 'border-box' }}>
+                          <div style={{ height: `${P_ROW_H}px`, padding: '1px 8px', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', position: 'relative', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white' }}>
                             <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#2563eb' }}></div>
-                            <div style={{ flex: 1, overflow: 'hidden', paddingRight: '4px' }}>
-                              <div style={{ fontSize: '0.62rem', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '600', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
+                            <div style={{ flex: 1, overflow: 'hidden', paddingRight: '6px' }}>
+                              <div style={{ fontSize: '0.68rem', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '600', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
                                 {match.p1 ? match.p1.name : getFeedingPlaceholder(true, match)}
                               </div>
                               {match.p1?.club && (
-                                <div style={{ fontSize: '0.48rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
+                                <div style={{ fontSize: '0.52rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1', marginTop: '1px' }}>
                                   {match.p1.club}
                                 </div>
                               )}
                             </div>
 
                             {match.p1 && flagCodeP1 && (
-                              <div style={{ marginLeft: '4px', flexShrink: 0 }}>
+                              <div style={{ marginLeft: '6px', flexShrink: 0 }}>
                                 <img 
                                   src={`https://flagcdn.com/w40/${flagCodeP1}.png`} 
                                   alt={flagCodeP1.toUpperCase()} 
-                                  style={{ width: '16px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
+                                  style={{ width: '17px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
                                 />
                               </div>
                             )}
 
                             {match.status === 'completed' && match.score1 !== null && (
-                              <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#2563eb' }}>{match.score1}</span>
+                              <span style={{ fontWeight: 'bold', marginLeft: '6px', fontSize: '0.68rem', color: '#2563eb' }}>{match.score1}</span>
                             )}
                           </div>
 
                           {/* Red corner */}
-                          <div style={{ height: `${P_ROW_H}px`, padding: '1px 6px 1px 8px', display: 'flex', alignItems: 'center', position: 'relative', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white', boxSizing: 'border-box' }}>
+                          <div style={{ height: `${P_ROW_H}px`, padding: '1px 8px', display: 'flex', alignItems: 'center', position: 'relative', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white' }}>
                             <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#dc2626' }}></div>
-                            <div style={{ flex: 1, overflow: 'hidden', paddingRight: '4px' }}>
-                              <div style={{ fontSize: '0.62rem', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '600', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
+                            <div style={{ flex: 1, overflow: 'hidden', paddingRight: '6px' }}>
+                              <div style={{ fontSize: '0.68rem', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '600', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
                                 {match.p2 ? match.p2.name : getFeedingPlaceholder(false, match)}
                               </div>
                               {match.p2?.club && (
-                                <div style={{ fontSize: '0.48rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
+                                <div style={{ fontSize: '0.52rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1', marginTop: '1px' }}>
                                   {match.p2.club}
                                 </div>
                               )}
                             </div>
 
                             {match.p2 && flagCodeP2 && (
-                              <div style={{ marginLeft: '4px', flexShrink: 0 }}>
+                              <div style={{ marginLeft: '6px', flexShrink: 0 }}>
                                 <img 
                                   src={`https://flagcdn.com/w40/${flagCodeP2}.png`} 
                                   alt={flagCodeP2.toUpperCase()} 
-                                  style={{ width: '16px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
+                                  style={{ width: '17px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
                                 />
                               </div>
                             )}
 
                             {match.status === 'completed' && match.score2 !== null && (
-                              <span style={{ fontWeight: 'bold', marginLeft: '4px', fontSize: '0.65rem', color: '#dc2626' }}>{match.score2}</span>
+                              <span style={{ fontWeight: 'bold', marginLeft: '6px', fontSize: '0.68rem', color: '#dc2626' }}>{match.score2}</span>
                             )}
                           </div>
                         </div>
