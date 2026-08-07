@@ -406,9 +406,15 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
     // Helper: lay out a sub-bracket from scratch with compact coordinates
     const layoutPool = (matchesByRound) => {
       const laid = matchesByRound.map(round => round.map(m => ({ ...m })));
-      // Position round 0 leaves
+      // Position round 0 leaves sequentially for visible matches (equal spacing, no blank gaps)
+      let visibleCount = 0;
       for (let i = 0; i < laid[0].length; i++) {
-        laid[0][i].py = P_MARGIN + P_HEADER + i * P_SLOT;
+        if (laid[0][i].status === 'walkover') {
+          laid[0][i].py = P_MARGIN + P_HEADER;
+        } else {
+          laid[0][i].py = P_MARGIN + P_HEADER + visibleCount * P_SLOT;
+          visibleCount++;
+        }
       }
       // Center parent rounds matching active vs walkover feeder logic
       for (let r = 1; r < laid.length; r++) {
@@ -416,22 +422,17 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
           const topChild = laid[r - 1][m * 2];
           const botChild = laid[r - 1][m * 2 + 1];
 
-          if (!topChild || !botChild) {
-            laid[r][m].py = P_MARGIN + P_HEADER + m * P_SLOT * Math.pow(2, r);
-            continue;
-          }
-
-          const topActive = topChild.status !== 'walkover';
-          const botActive = botChild.status !== 'walkover';
+          const topActive = topChild && topChild.status !== 'walkover';
+          const botActive = botChild && botChild.status !== 'walkover';
 
           if (topActive && botActive) {
             laid[r][m].py = (topChild.py + botChild.py) / 2;
-          } else if (topActive && !botActive) {
+          } else if (topActive) {
             laid[r][m].py = topChild.py;
-          } else if (!topActive && botActive) {
+          } else if (botActive) {
             laid[r][m].py = botChild.py;
           } else {
-            laid[r][m].py = (topChild.py + botChild.py) / 2;
+            laid[r][m].py = P_MARGIN + P_HEADER + m * P_SLOT * Math.pow(2, r);
           }
         }
       }
@@ -451,7 +452,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
           lines.push({ d: getStepPath(x1, y1, x2, y2) });
         }
       }
-      const leafCount = laid[0].length;
+      const leafCount = Math.max(1, visibleCount);
       const height = P_MARGIN + P_HEADER + leafCount * P_SLOT + P_MARGIN;
       const width = P_MARGIN * 2 + laid.length * P_COL_STEP;
       return { rounds: laid, lines, height, width };
