@@ -274,7 +274,7 @@ function MatchModal({ match, onClose, onSave }) {
                 <label className="form-label">Victory Method</label>
                 <select className="form-control" value={winType} onChange={e => setWinType(e.target.value)}>
                   <option value="PTS">Points (PTS) - Normal score-based win</option>
-                  <option value="PTG">Points Gap (PTG) - Win by 12 points margin</option>
+                  <option value="PTG">Points Gap (PTG) - Win by 15 points margin</option>
                   <option value="SUP">Superiority (SUP) - Referee decision / active play</option>
                   <option value="WDR">Withdrawal (WDR) - Injured or retired during match</option>
                   <option value="DSQ">Disqualification (DSQ) - Misconduct or max warnings</option>
