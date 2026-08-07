@@ -847,11 +847,12 @@ body {
   .print-only-page {
     display: block !important;
     position: relative;
-    width: 1040px !important;
-    height: 680px !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 98vh !important;
     box-sizing: border-box !important;
     margin: 0 !important;
-    padding: 20px !important;
+    padding: 10px !important;
     background-color: white !important;
     overflow: hidden !important;
   }
