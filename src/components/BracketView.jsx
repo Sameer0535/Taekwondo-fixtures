@@ -432,11 +432,11 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
       const lines = [];
       for (let r = 0; r < laid.length - 1; r++) {
         for (const match of laid[r]) {
-          if (match.status === 'walkover') continue;
+          if (r === 0 && match.status === 'walkover') continue;
           const isTop = match.matchIndex % 2 === 0;
           const nextIdx = Math.floor(match.matchIndex / 2);
           const next = laid[r + 1][nextIdx];
-          if (!next || next.status === 'walkover') continue;
+          if (!next) continue;
           const x1 = P_MARGIN + r * P_COL_STEP + P_COL_W;
           const x2 = P_MARGIN + (r + 1) * P_COL_STEP;
           const y1 = match.py + P_CARD_MID;
@@ -884,7 +884,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
                   </div>
 
                   {round.map((match) => {
-                    if (match.status === 'walkover') return null;
+                    if (rIndex === 0 && match.status === 'walkover') return null;
                     return (
                       <div 
                         key={match.id}
