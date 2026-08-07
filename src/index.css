@@ -846,10 +846,10 @@ body {
   }
   .print-only-page {
     display: block !important;
-    position: relative;
+    position: relative !important;
     width: 100% !important;
-    height: 100% !important;
-    max-height: 98vh !important;
+    height: 650px !important;
+    min-height: 650px !important;
     box-sizing: border-box !important;
     margin: 0 !important;
     padding: 10px !important;
