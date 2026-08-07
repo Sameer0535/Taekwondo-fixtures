@@ -853,7 +853,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
         const PRINT_SAFE_H = 590;
         const scaleVal = Math.min(1.0, PRINT_SAFE_W / page.width, PRINT_SAFE_H / page.height);
         return (
-          <div key={pIdx} className="print-only-page print-page">
+          <div key={pIdx} className="print-only-page print-page" style={{ position: 'relative', minHeight: '580px' }}>
             <div style={{ marginBottom: '0.4rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.2rem' }}>
               <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--primary)', fontWeight: 'bold' }}>
                 {divisionName} — {page.name}
@@ -978,29 +978,29 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
               ))}
             </div>
 
-            {/* Podium block — ONLY on Finals page, bottom-right corner */}
+            {/* Podium block — placed at bottom-right corner of the printed page */}
             {page.isFinals && podium && (
-              <div style={{ position: 'absolute', bottom: '20px', right: '20px', width: '200px', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: 'white', overflow: 'hidden' }}>
-                <table style={{ width: '100%', fontSize: '0.6rem', borderCollapse: 'collapse' }}>
+              <div style={{ position: 'absolute', bottom: '20px', right: '25px', width: '220px', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: 'white', overflow: 'hidden', zIndex: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <table style={{ width: '100%', fontSize: '0.68rem', borderCollapse: 'collapse' }}>
                   <tbody>
                     <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      <td style={{ width: '30px', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '3px', borderRight: '1px solid #e2e8f0' }}>1st</td>
-                      <td style={{ padding: '3px 6px', fontWeight: podium.first ? 'bold' : 'normal' }}>{podium.first?.name || ''}</td>
+                      <td style={{ width: '36px', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '4px 6px', borderRight: '1px solid #e2e8f0' }}>1st</td>
+                      <td style={{ padding: '4px 8px', fontWeight: podium.first ? 'bold' : 'normal' }}>{podium.first?.name || ''}</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '3px', borderRight: '1px solid #e2e8f0' }}>2nd</td>
-                      <td style={{ padding: '3px 6px' }}>{podium.second?.name || ''}</td>
+                      <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '4px 6px', borderRight: '1px solid #e2e8f0' }}>2nd</td>
+                      <td style={{ padding: '4px 8px' }}>{podium.second?.name || ''}</td>
                     </tr>
                     {numSemiMatches >= 1 && (
                       <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                        <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '3px', borderRight: '1px solid #e2e8f0' }}>3rd</td>
-                        <td style={{ padding: '3px 6px' }}>{podium.bronze1?.name || ''}</td>
+                        <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '4px 6px', borderRight: '1px solid #e2e8f0' }}>3rd</td>
+                        <td style={{ padding: '4px 8px' }}>{podium.bronze1?.name || ''}</td>
                       </tr>
                     )}
                     {numSemiMatches >= 2 && (
                       <tr>
-                        <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '3px', borderRight: '1px solid #e2e8f0' }}>3rd</td>
-                        <td style={{ padding: '3px 6px' }}>{podium.bronze2?.name || ''}</td>
+                        <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '4px 6px', borderRight: '1px solid #e2e8f0' }}>3rd</td>
+                        <td style={{ padding: '4px 8px' }}>{podium.bronze2?.name || ''}</td>
                       </tr>
                     )}
                   </tbody>
