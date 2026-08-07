@@ -410,18 +410,32 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
       for (let i = 0; i < laid[0].length; i++) {
         laid[0][i].py = P_MARGIN + P_HEADER + i * P_SLOT;
       }
-      // Center parent rounds
+      // Position parent rounds using feeder slot alignment
       for (let r = 1; r < laid.length; r++) {
         for (let m = 0; m < laid[r].length; m++) {
-          if (laid[r][m].status === 'walkover') {
-            // inherit from child that feeds into this slot
-            const child = laid[r - 1][m * 2] || laid[r - 1][m * 2 + 1];
-            laid[r][m].py = child ? child.py : P_MARGIN + P_HEADER + m * P_SLOT;
+          const top = laid[r - 1][m * 2];
+          const bot = laid[r - 1][m * 2 + 1];
+
+          const topActive = top && top.status !== 'walkover';
+          const botActive = bot && bot.status !== 'walkover';
+
+          if (topActive && botActive) {
+            // Both children are active fights — center parent between them
+            laid[r][m].py = (top.py + bot.py) / 2;
+          } else if (!topActive && botActive) {
+            // Top is a bye (hidden), bot is an active fight: align parent's red slot with bot's center
+            laid[r][m].py = bot.py + P_CARD_MID - P_RED_MID;
+          } else if (topActive && !botActive) {
+            // Top is an active fight, bot is a bye (hidden): align parent's blue slot with top's center
+            laid[r][m].py = top.py + P_CARD_MID - P_BLUE_MID;
           } else {
-            const top = laid[r - 1][m * 2];
-            const bot = laid[r - 1][m * 2 + 1];
+            // Both are byes or inactive
             if (top && bot) {
               laid[r][m].py = (top.py + bot.py) / 2;
+            } else if (top) {
+              laid[r][m].py = top.py;
+            } else if (bot) {
+              laid[r][m].py = bot.py;
             } else {
               laid[r][m].py = P_MARGIN + P_HEADER + m * P_SLOT * Math.pow(2, r);
             }
