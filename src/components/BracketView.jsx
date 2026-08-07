@@ -850,7 +850,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
       {isLargeBracket && printPages.map((page, pIdx) => {
         // Safe printable area in landscape A4 paper
         const PRINT_SAFE_W = 980;
-        const PRINT_SAFE_H = 650;
+        const PRINT_SAFE_H = 590;
         const scaleVal = Math.min(1.0, PRINT_SAFE_W / page.width, PRINT_SAFE_H / page.height);
         return (
           <div key={pIdx} className="print-only-page print-page">
