@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import CompetitorList from './components/CompetitorList';
 import BracketView from './components/BracketView';
 import ResultsView from './components/ResultsView';
@@ -49,7 +49,32 @@ const SAMPLE_COMPETITORS = [
   })
 ];
 
+
+const SAMPLE_GROUP4_COMPETITORS = [
+  { id: 'g4_1', name: 'Rahul Sharma', club: 'Delhi TKD', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_2', name: 'Aarav Patel', club: 'Mumbai TKD', country: 'IND', seed: 2, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Green Belt' },
+  { id: 'g4_3', name: 'Kabir Singh', club: 'Punjab Academy', country: 'IND', seed: 3, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_4', name: 'Vivaan Joshi', club: 'Delhi TKD', country: 'IND', seed: 4, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Blue Belt' },
+  { id: 'g4_5', name: 'Rohan Gupta', club: 'Bangalore Center', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_6', name: 'Aditya Verma', club: 'Pune TKD', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Green Belt' },
+  { id: 'g4_7', name: 'Ananya Roy', club: 'Kolkata Strikers', country: 'IND', seed: 1, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_8', name: 'Diya Kumar', club: 'Chennai Lions', country: 'IND', seed: 2, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_9', name: 'Sanya Malhotra', club: 'Delhi TKD', country: 'IND', seed: 3, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Green Belt' },
+  { id: 'g4_10', name: 'Myra Kapoor', club: 'Mumbai TKD', country: 'IND', seed: 4, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_11', name: 'Devansh Reddy', club: 'Hyderabad Center', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Red Belt' },
+  { id: 'g4_12', name: 'Ishaan Nair', club: 'Kerala TKD', country: 'IND', seed: 2, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Blue Belt' },
+  { id: 'g4_13', name: 'Reyansh Rao', club: 'Bangalore Center', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Red Belt' }
+];
+
 function App() {
+  const [tournamentMode, setTournamentMode] = useState(() => {
+    const saved = localStorage.getItem('tkd_tournament_mode_v1');
+    return saved || 'official';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('tkd_tournament_mode_v1', tournamentMode);
+  }, [tournamentMode]);
   const [competitors, setCompetitors] = useState(() => {
     const saved = localStorage.getItem('tkd_competitors_v3');
     return saved ? JSON.parse(saved) : SAMPLE_COMPETITORS;
@@ -74,17 +99,56 @@ function App() {
   }, [brackets]);
 
 
-  // Compute divisions dynamically
-  const divisions = {};
-  competitors.forEach(c => {
-    const divId = `${c.gender}_${c.ageCategory}_${c.weightClass}`.replace(/\s+/g, '_');
-    const divName = `${c.gender} ${c.ageCategory} ${c.weightClass}`;
-    if (!divisions[divId]) {
-      divisions[divId] = { id: divId, name: divName, count: 0, competitors: [] };
+  // Compute divisions dynamically based on tournamentMode
+  const divisions = useMemo(() => {
+    const divs = {};
+    if (tournamentMode === 'group4') {
+      const categories = {};
+      competitors.forEach(c => {
+        const catKey = `${c.gender}_${c.ageCategory}`.replace(/\s+/g, '_');
+        if (!categories[catKey]) {
+          categories[catKey] = {
+            gender: c.gender,
+            ageCategory: c.ageCategory,
+            competitors: []
+          };
+        }
+        categories[catKey].competitors.push(c);
+      });
+
+      Object.entries(categories).forEach(([catKey, cat]) => {
+        const comps = cat.competitors;
+        const groupSize = 4;
+        const totalGroups = Math.ceil(comps.length / groupSize);
+
+        for (let i = 0; i < totalGroups; i++) {
+          const groupComps = comps.slice(i * groupSize, (i + 1) * groupSize);
+          const groupSuffix = totalGroups > 1 ? ` (Group ${i + 1})` : '';
+          const divId = `${catKey}_g${i + 1}`;
+          const divName = `${cat.gender} ${cat.ageCategory}${groupSuffix}`;
+
+          divs[divId] = {
+            id: divId,
+            name: divName,
+            count: groupComps.length,
+            competitors: groupComps
+          };
+        }
+      });
+    } else {
+      competitors.forEach(c => {
+        const wc = c.weightClass || 'Open';
+        const divId = `${c.gender}_${c.ageCategory}_${wc}`.replace(/\s+/g, '_');
+        const divName = `${c.gender} ${c.ageCategory} ${wc}`;
+        if (!divs[divId]) {
+          divs[divId] = { id: divId, name: divName, count: 0, competitors: [] };
+        }
+        divs[divId].count++;
+        divs[divId].competitors.push(c);
+      });
     }
-    divisions[divId].count++;
-    divisions[divId].competitors.push(c);
-  });
+    return divs;
+  }, [competitors, tournamentMode]);
 
   // Select first division by default if none is selected
   useEffect(() => {
@@ -136,7 +200,8 @@ function App() {
 
   const handleLoadSampleData = () => {
     if (window.confirm("Load sample competitors? (This will overwrite current data)")) {
-      setCompetitors(SAMPLE_COMPETITORS);
+      const samples = tournamentMode === 'group4' ? SAMPLE_GROUP4_COMPETITORS : SAMPLE_COMPETITORS;
+      setCompetitors(samples);
       setBrackets({});
       setSelectedDivisionId('');
     }
@@ -235,6 +300,8 @@ function App() {
             setCompetitors={setCompetitors} 
             onLoadSamples={handleLoadSampleData}
             onClearAll={handleClearAllData}
+            tournamentMode={tournamentMode}
+            setTournamentMode={setTournamentMode}
           />
         )}
 

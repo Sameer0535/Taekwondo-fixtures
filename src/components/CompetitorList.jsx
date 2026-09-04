@@ -111,7 +111,7 @@ const WEIGHT_CATEGORIES = {
 
 
 
-function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll }) {
+function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll, tournamentMode = 'official', setTournamentMode }) {
   // Form State
   const [name, setName] = useState('');
   const [club, setClub] = useState('');
@@ -119,6 +119,22 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
   const [gender, setGender] = useState('Male');
   const [ageCategory, setAgeCategory] = useState('Senior');
   const [weightClass, setWeightClass] = useState('Under 68kg');
+
+  const GROUP4_AGE_CLASSES = ['U-4', 'U-6', 'U-8', 'U-10', 'U-12', 'U-15', 'U-18', 'A-18'];
+
+  useEffect(() => {
+    if (tournamentMode === 'group4') {
+      if (!GROUP4_AGE_CLASSES.includes(ageCategory)) {
+        setAgeCategory('U-10');
+      }
+    } else {
+      if (GROUP4_AGE_CLASSES.includes(ageCategory)) {
+        setAgeCategory('Senior');
+        const weights = WEIGHT_CATEGORIES['Senior']?.[gender] || [];
+        if (weights.length > 0) setWeightClass(weights[0].value);
+      }
+    }
+  }, [tournamentMode]);
 
   // Custom Searchable Dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -151,9 +167,11 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
 
   const handleAgeCategoryChange = (newAge) => {
     setAgeCategory(newAge);
-    const weights = WEIGHT_CATEGORIES[newAge]?.[gender] || [];
-    if (weights.length > 0) {
-      setWeightClass(weights[0].value);
+    if (tournamentMode !== 'group4') {
+      const weights = WEIGHT_CATEGORIES[newAge]?.[gender] || [];
+      if (weights.length > 0) {
+        setWeightClass(weights[0].value);
+      }
     }
   };
   // Search Filter
@@ -170,7 +188,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
       country,
       gender,
       ageCategory,
-      weightClass,
+      weightClass: tournamentMode === 'group4' ? '' : weightClass,
       rank: '',
       seed: null
     };
@@ -244,7 +262,52 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
   return (
     <div className="dashboard-grid">
       {/* Sidebar: Entry Form */}
-      <div className="card">
+      <div>
+        <div className="card" style={{ marginBottom: '1.25rem', padding: '1rem' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Tournament Mode
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', backgroundColor: 'var(--bg-primary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <button
+              type="button"
+              style={{
+                padding: '0.5rem 0.75rem',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: tournamentMode === 'official' ? 'var(--blue-comp)' : 'transparent',
+                color: tournamentMode === 'official' ? '#ffffff' : 'var(--text-color)',
+                boxShadow: tournamentMode === 'official' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setTournamentMode && setTournamentMode('official')}
+            >
+              Official
+            </button>
+            <button
+              type="button"
+              style={{
+                padding: '0.5rem 0.75rem',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: tournamentMode === 'group4' ? 'var(--blue-comp)' : 'transparent',
+                color: tournamentMode === 'group4' ? '#ffffff' : 'var(--text-color)',
+                boxShadow: tournamentMode === 'group4' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setTournamentMode && setTournamentMode('group4')}
+            >
+              Group-4
+            </button>
+          </div>
+        </div>
+
+        <div className="card">
         <div className="card-title">
           <span>Add Competitor</span>
         </div>
@@ -388,22 +451,39 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
             <div className="form-group">
               <label className="form-label">Age Class</label>
               <select className="form-control" value={ageCategory} onChange={e => handleAgeCategoryChange(e.target.value)}>
-                <option value="Sub-Junior">Sub-Junior</option>
-                <option value="Cadet">Cadet (12-14)</option>
-                <option value="Junior">Junior (15-17)</option>
-                <option value="Senior">Senior (18+)</option>
+                {tournamentMode === 'group4' ? (
+                  <>
+                    <option value="U-4">U-4</option>
+                    <option value="U-6">U-6</option>
+                    <option value="U-8">U-8</option>
+                    <option value="U-10">U-10</option>
+                    <option value="U-12">U-12</option>
+                    <option value="U-15">U-15</option>
+                    <option value="U-18">U-18</option>
+                    <option value="A-18">A-18</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="Sub-Junior">Sub-Junior</option>
+                    <option value="Cadet">Cadet (12-14)</option>
+                    <option value="Junior">Junior (15-17)</option>
+                    <option value="Senior">Senior (18+)</option>
+                  </>
+                )}
               </select>
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Weight Division</label>
-            <select className="form-control" value={weightClass} onChange={e => setWeightClass(e.target.value)}>
-              {(WEIGHT_CATEGORIES[ageCategory]?.[gender] || []).map(wc => (
-                <option key={wc.value} value={wc.value}>{wc.label}</option>
-              ))}
-            </select>
-          </div>
+          {tournamentMode !== 'group4' && (
+            <div className="form-group">
+              <label className="form-label">Weight Division</label>
+              <select className="form-control" value={weightClass} onChange={e => setWeightClass(e.target.value)}>
+                {(WEIGHT_CATEGORIES[ageCategory]?.[gender] || []).map(wc => (
+                  <option key={wc.value} value={wc.value}>{wc.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
             Add Competitor
@@ -426,6 +506,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
             Clear All Competitors
           </button>
         </div>
+      </div>
       </div>
 
       {/* Main Panel: Competitors Table */}
@@ -489,7 +570,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
                     </td>
                     <td>{comp.club}</td>
                     <td>
-                      <span className="badge badge-gray">{comp.ageCategory} {comp.weightClass}</span>
+                      <span className="badge badge-gray">{comp.ageCategory}{comp.weightClass ? ` ${comp.weightClass}` : ''}</span>
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <button 
