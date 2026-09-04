@@ -543,7 +543,7 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets })
   return (
     <div>
       <div className="no-print bracket-header">
-        <h4 style={{ color: 'var(--text-muted)' }}>{divisionName}{courtNo ? ` - Court ${courtNo}` : ''} {courtNo ? `(Court ${courtNo})` : ''} Bracket</h4>
+        <h4 style={{ color: 'var(--text-muted)' }}>{divisionName}{courtNo ? ` - Court ${courtNo}` : ''} Bracket</h4>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className="btn btn-secondary btn-sm" onClick={() => handleZoom(1.15)}>Zoom +</button>
           <button className="btn btn-secondary btn-sm" onClick={() => handleZoom(0.85)}>Zoom -</button>
