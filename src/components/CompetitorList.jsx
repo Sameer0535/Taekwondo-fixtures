@@ -111,7 +111,7 @@ const WEIGHT_CATEGORIES = {
 
 
 
-function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll, tournamentMode = 'official', setTournamentMode }) {
+function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll, tournamentMode = 'official', setTournamentMode, totalCourts = 4, setTotalCourts }) {
   // Form State
   const [name, setName] = useState('');
   const [club, setClub] = useState('');
@@ -305,6 +305,22 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
               Group-4
             </button>
           </div>
+        </div>
+
+        <div className="card" style={{ marginBottom: '1.25rem', padding: '1rem' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Total Courts Available
+          </div>
+          <select 
+            className="form-control"
+            value={totalCourts}
+            onChange={e => setTotalCourts && setTotalCourts(Number(e.target.value))}
+            style={{ fontSize: '0.85rem' }}
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20].map(n => (
+              <option key={n} value={n}>{n} {n === 1 ? 'Court' : 'Courts'}</option>
+            ))}
+          </select>
         </div>
 
         <div className="card">

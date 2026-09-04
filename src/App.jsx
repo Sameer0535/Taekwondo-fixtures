@@ -93,9 +93,34 @@ function App() {
     return saved || 'official';
   });
 
+  const [totalCourts, setTotalCourts] = useState(() => {
+    const saved = localStorage.getItem('tkd_total_courts_v1');
+    return saved ? Number(saved) : 4;
+  });
+
+  const [divisionCourts, setDivisionCourts] = useState(() => {
+    const saved = localStorage.getItem('tkd_division_courts_v1');
+    return saved ? JSON.parse(saved) : {};
+  });
+
   useEffect(() => {
     localStorage.setItem('tkd_tournament_mode_v1', tournamentMode);
   }, [tournamentMode]);
+
+  useEffect(() => {
+    localStorage.setItem('tkd_total_courts_v1', totalCourts);
+  }, [totalCourts]);
+
+  useEffect(() => {
+    localStorage.setItem('tkd_division_courts_v1', JSON.stringify(divisionCourts));
+  }, [divisionCourts]);
+
+  const handleAssignCourt = (divId, courtNo) => {
+    setDivisionCourts(prev => ({
+      ...prev,
+      [divId]: courtNo
+    }));
+  };
 
   const handleSetTournamentMode = (newMode) => {
     setTournamentMode(newMode);
@@ -344,6 +369,8 @@ function App() {
             onClearAll={handleClearAllData}
             tournamentMode={tournamentMode}
             setTournamentMode={handleSetTournamentMode}
+            totalCourts={totalCourts}
+            setTotalCourts={setTotalCourts}
           />
         )}
 
@@ -365,13 +392,14 @@ function App() {
                     <th>Division Name</th>
                     <th>Competitors</th>
                     <th>Bracket Status</th>
+                    <th>Court / Ring</th>
                     <th className="no-print" style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.values(divisions).length === 0 ? (
                     <tr>
-                      <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                         No competitors registered yet. Please add competitors first.
                       </td>
                     </tr>
@@ -386,6 +414,21 @@ function App() {
                           ) : (
                             <span className="badge badge-gray">Not Generated</span>
                           )}
+                        </td>
+                        <td>
+                          <select
+                            className="form-control"
+                            style={{ width: 'auto', minWidth: '110px', fontSize: '0.85rem', padding: '0.3rem 0.5rem' }}
+                            value={divisionCourts[div.id] || ''}
+                            onChange={(e) => handleAssignCourt(div.id, e.target.value)}
+                          >
+                            <option value="">Unassigned</option>
+                            {Array.from({ length: totalCourts }, (_, i) => i + 1).map(courtNum => (
+                              <option key={courtNum} value={courtNum}>
+                                Court {courtNum}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="no-print" style={{ textAlign: 'right' }}>
                           <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
@@ -454,6 +497,7 @@ function App() {
               <BracketView 
                 divisionId={selectedDivisionId}
                 divisionName={divisions[selectedDivisionId]?.name}
+                courtNo={divisionCourts[selectedDivisionId]}
                 rounds={brackets[selectedDivisionId]}
                 setBrackets={setBrackets}
               />

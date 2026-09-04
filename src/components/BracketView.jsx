@@ -15,7 +15,7 @@ const getStepPath = (x1, y1, x2, y2) => {
   return `M ${x1} ${y1} H ${xmid - r} Q ${xmid} ${y1}, ${xmid} ${y1 + dy} V ${y2 - dy} Q ${xmid} ${y2}, ${xmid + r} ${y2} H ${x2}`;
 };
 
-function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
+function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets }) {
   const [selectedMatch, setSelectedMatch] = useState(null);
 
   // Hover Path Tracking State
@@ -543,7 +543,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
   return (
     <div>
       <div className="no-print bracket-header">
-        <h4 style={{ color: 'var(--text-muted)' }}>{divisionName} Bracket</h4>
+        <h4 style={{ color: 'var(--text-muted)' }}>{divisionName}{courtNo ? ` - Court ${courtNo}` : ''} {courtNo ? `(Court ${courtNo})` : ''} Bracket</h4>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className="btn btn-secondary btn-sm" onClick={() => handleZoom(1.15)}>Zoom +</button>
           <button className="btn btn-secondary btn-sm" onClick={() => handleZoom(0.85)}>Zoom -</button>
@@ -556,7 +556,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
       {!isLargeBracket && (
         <div className="print-only-header" style={{ marginBottom: '1rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.5rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--primary)' }}>
-            {divisionName}
+            {divisionName}{courtNo ? ` - Court ${courtNo}` : ''}
           </h2>
         </div>
       )}
@@ -856,7 +856,7 @@ function BracketView({ divisionId, divisionName, rounds, setBrackets }) {
           <div key={pIdx} className="print-only-page print-page" style={{ position: 'relative', minHeight: '100%', height: '100%', boxSizing: 'border-box' }}>
             <div style={{ marginBottom: '0.4rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.2rem' }}>
               <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--primary)', fontWeight: 'bold' }}>
-                {divisionName} — {page.name}
+                {divisionName}{courtNo ? ` - Court ${courtNo}` : ''} — {page.name}
               </h3>
             </div>
             
