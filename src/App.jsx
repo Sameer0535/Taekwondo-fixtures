@@ -51,19 +51,40 @@ const SAMPLE_COMPETITORS = [
 
 
 const SAMPLE_GROUP4_COMPETITORS = [
+  // Male U-10 (10 players -> 3 groups of max 4 players)
   { id: 'g4_1', name: 'Rahul Sharma', club: 'Delhi TKD', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Yellow Belt' },
   { id: 'g4_2', name: 'Aarav Patel', club: 'Mumbai TKD', country: 'IND', seed: 2, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Green Belt' },
   { id: 'g4_3', name: 'Kabir Singh', club: 'Punjab Academy', country: 'IND', seed: 3, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Yellow Belt' },
   { id: 'g4_4', name: 'Vivaan Joshi', club: 'Delhi TKD', country: 'IND', seed: 4, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Blue Belt' },
   { id: 'g4_5', name: 'Rohan Gupta', club: 'Bangalore Center', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Yellow Belt' },
   { id: 'g4_6', name: 'Aditya Verma', club: 'Pune TKD', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Green Belt' },
-  { id: 'g4_7', name: 'Ananya Roy', club: 'Kolkata Strikers', country: 'IND', seed: 1, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
-  { id: 'g4_8', name: 'Diya Kumar', club: 'Chennai Lions', country: 'IND', seed: 2, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
-  { id: 'g4_9', name: 'Sanya Malhotra', club: 'Delhi TKD', country: 'IND', seed: 3, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Green Belt' },
-  { id: 'g4_10', name: 'Myra Kapoor', club: 'Mumbai TKD', country: 'IND', seed: 4, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
-  { id: 'g4_11', name: 'Devansh Reddy', club: 'Hyderabad Center', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Red Belt' },
-  { id: 'g4_12', name: 'Ishaan Nair', club: 'Kerala TKD', country: 'IND', seed: 2, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Blue Belt' },
-  { id: 'g4_13', name: 'Reyansh Rao', club: 'Bangalore Center', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Red Belt' }
+  { id: 'g4_7', name: 'Arjun Mehta', club: 'Jaipur TKD', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_8', name: 'Reyansh Deshmukh', club: 'Nagpur Club', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Green Belt' },
+  { id: 'g4_9', name: 'Atharv Kulkarni', club: 'Nashik Academy', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_10', name: 'Vihaan Saxena', club: 'Lucknow Center', country: 'IND', seed: null, gender: 'Male', ageCategory: 'U-10', weightClass: '', rank: 'Blue Belt' },
+
+  // Female U-8 (8 players -> 2 groups of 4 players)
+  { id: 'g4_11', name: 'Ananya Roy', club: 'Kolkata Strikers', country: 'IND', seed: 1, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_12', name: 'Diya Kumar', club: 'Chennai Lions', country: 'IND', seed: 2, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_13', name: 'Sanya Malhotra', club: 'Delhi TKD', country: 'IND', seed: 3, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Green Belt' },
+  { id: 'g4_14', name: 'Myra Kapoor', club: 'Mumbai TKD', country: 'IND', seed: 4, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_15', name: 'Isha Bhatia', club: 'Chandigarh TKD', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_16', name: 'Kavya Sharma', club: 'Agra Strikers', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Green Belt' },
+  { id: 'g4_17', name: 'Riya Sen', club: 'Ranchi Center', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
+  { id: 'g4_18', name: 'Avani Reddy', club: 'Hyderabad Center', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
+
+  // Male U-12 (4 players -> 1 group of 4 players)
+  { id: 'g4_19', name: 'Devansh Reddy', club: 'Hyderabad Center', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Red Belt' },
+  { id: 'g4_20', name: 'Ishaan Nair', club: 'Kerala TKD', country: 'IND', seed: 2, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Blue Belt' },
+  { id: 'g4_21', name: 'Reyansh Rao', club: 'Bangalore Center', country: 'IND', seed: 3, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Red Belt' },
+  { id: 'g4_22', name: 'Yash Vardhan', club: 'Indore TKD', country: 'IND', seed: 4, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Blue Belt' },
+
+  // Female U-15 (5 players -> 2 groups)
+  { id: 'g4_23', name: 'Pari Choudhary', club: 'Jaipur TKD', country: 'IND', seed: 1, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Red Belt' },
+  { id: 'g4_24', name: 'Nisha Agarwal', club: 'Delhi TKD', country: 'IND', seed: 2, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Black Belt' },
+  { id: 'g4_25', name: 'Simran Gill', club: 'Punjab Academy', country: 'IND', seed: 3, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Red Belt' },
+  { id: 'g4_26', name: 'Tanvi Shah', club: 'Ahmedabad Strikers', country: 'IND', seed: 4, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Blue Belt' },
+  { id: 'g4_27', name: 'Meera Iyer', club: 'Chennai Lions', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Red Belt' }
 ];
 
 function App() {
@@ -75,6 +96,19 @@ function App() {
   useEffect(() => {
     localStorage.setItem('tkd_tournament_mode_v1', tournamentMode);
   }, [tournamentMode]);
+
+  const handleSetTournamentMode = (newMode) => {
+    setTournamentMode(newMode);
+    if (newMode === 'group4' && (competitors === SAMPLE_COMPETITORS || (competitors.length > 0 && competitors[0].ageCategory === 'Senior' && competitors[0].weightClass === 'Under 68kg'))) {
+      setCompetitors(SAMPLE_GROUP4_COMPETITORS);
+      setBrackets({});
+      setSelectedDivisionId('');
+    } else if (newMode === 'official' && competitors === SAMPLE_GROUP4_COMPETITORS) {
+      setCompetitors(SAMPLE_COMPETITORS);
+      setBrackets({});
+      setSelectedDivisionId('');
+    }
+  };
   const [competitors, setCompetitors] = useState(() => {
     const saved = localStorage.getItem('tkd_competitors_v3');
     return saved ? JSON.parse(saved) : SAMPLE_COMPETITORS;
@@ -104,12 +138,20 @@ function App() {
     const divs = {};
     if (tournamentMode === 'group4') {
       const categories = {};
+      const ageMap = {
+        'Senior': 'A-18',
+        'Junior': 'U-18',
+        'Cadet': 'U-15',
+        'Sub-Junior': 'U-12'
+      };
+
       competitors.forEach(c => {
-        const catKey = `${c.gender}_${c.ageCategory}`.replace(/\s+/g, '_');
+        const ageCat = ageMap[c.ageCategory] || c.ageCategory;
+        const catKey = `${c.gender}_${ageCat}`.replace(/\s+/g, '_');
         if (!categories[catKey]) {
           categories[catKey] = {
             gender: c.gender,
-            ageCategory: c.ageCategory,
+            ageCategory: ageCat,
             competitors: []
           };
         }
@@ -301,7 +343,7 @@ function App() {
             onLoadSamples={handleLoadSampleData}
             onClearAll={handleClearAllData}
             tournamentMode={tournamentMode}
-            setTournamentMode={setTournamentMode}
+            setTournamentMode={handleSetTournamentMode}
           />
         )}
 
