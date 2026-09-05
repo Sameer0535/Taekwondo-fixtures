@@ -22,7 +22,7 @@ const getStepPath = (x1, y1, x2, y2) => {
   return `M ${x1} ${y1} H ${xmid - r} Q ${xmid} ${y1}, ${xmid} ${y1_corner} V ${y2_corner} Q ${xmid} ${y2}, ${xmid + r} ${y2} H ${x2}`;
 };
 
-function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, onRegenerate }) {
+function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, onRegenerate, hideHeaderTitle = false }) {
   const [selectedMatch, setSelectedMatch] = useState(null);
 
   // Hover Path Tracking State
@@ -549,8 +549,10 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
 
   return (
     <div>
-      <div className="no-print bracket-header">
-        <h4 style={{ color: 'var(--text-muted)' }}>{divisionName}{courtNo ? ` - Court ${courtNo}` : ''} Bracket</h4>
+      <div className="no-print bracket-header" style={{ justifyContent: hideHeaderTitle ? 'flex-end' : 'space-between' }}>
+        {!hideHeaderTitle && (
+          <h4 style={{ color: 'var(--text-muted)', margin: 0 }}>{divisionName}{courtNo ? ` - Court ${courtNo}` : ''} Bracket</h4>
+        )}
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {onRegenerate && (
             <button className="btn btn-secondary btn-sm" onClick={onRegenerate} title="Re-shuffle bracket and separate same-academy players">

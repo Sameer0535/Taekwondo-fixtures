@@ -2,11 +2,36 @@ import React, { useState, useMemo, useEffect } from 'react';
 import BracketView from './BracketView';
 import { nocToIso } from '../utils/countries';
 
+// Clean SVG Icons
+const TrophyIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
+);
+
+const MedalIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+    <circle cx="12" cy="8" r="6" />
+    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+  </svg>
+);
+
+const CourtIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+    <rect width="20" height="14" x="2" y="5" rx="2" />
+    <line x1="12" x2="12" y1="5" y2="19" />
+  </svg>
+);
+
 function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, totalCourts = 4, setBrackets }) {
   const [selectedCourt, setSelectedCourt] = useState('all');
   const [selectedDivisionId, setSelectedDivisionId] = useState('');
   const [viewMode, setViewMode] = useState('bracket'); // 'bracket' | 'podium'
-  const [searchTerm, setSearchTerm] = useState('');
 
   // 1. Gather all divisions with their brackets, court assignments, and calculate completion statistics
   const allDivisionStats = useMemo(() => {
@@ -93,7 +118,7 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
     return list;
   }, [divisions, brackets, divisionCourts]);
 
-  // 2. Filter division stats according to selected court and search term
+  // 2. Filter division stats according to selected court
   const filteredDivisionStats = useMemo(() => {
     let list = allDivisionStats;
     if (selectedCourt !== 'all') {
@@ -103,12 +128,8 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
         list = list.filter(d => String(d.courtNo) === String(selectedCourt));
       }
     }
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      list = list.filter(d => d.name.toLowerCase().includes(term));
-    }
     return list;
-  }, [allDivisionStats, selectedCourt, searchTerm]);
+  }, [allDivisionStats, selectedCourt]);
 
   // Auto-select first division if current selection is invalid for filtered list
   useEffect(() => {
@@ -166,25 +187,21 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       
-      {/* Court Selection Bar */}
-      <div className="card no-print" style={{ padding: '1rem 1.25rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.4rem' }}>???</span>
-            <div>
-              <div style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--text-main)' }}>Select Court for Results & Brackets</div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Choose a court to filter standings, view statistics, and inspect live updated bracket diagrams
-              </div>
-            </div>
-          </div>
-
+      {/* 1. Court Selector & Quick Summary Bar */}
+      <div className="card no-print" style={{ padding: '0.85rem 1.25rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+          
+          {/* Court Filter Pills */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginRight: '0.25rem' }}>
+              Court Filter:
+            </span>
+
             <button
               className={('btn ' + (selectedCourt === 'all' ? 'btn-primary' : 'btn-secondary'))}
-              style={{ fontSize: '0.85rem', padding: '0.45rem 0.9rem', borderRadius: '8px' }}
+              style={{ fontSize: '0.85rem', padding: '0.35rem 0.85rem', borderRadius: '8px' }}
               onClick={() => setSelectedCourt('all')}
             >
               All Courts ({allDivisionStats.length})
@@ -193,20 +210,21 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
             {Array.from({ length: totalCourts }, (_, i) => i + 1).map(courtNum => {
               const courtStr = String(courtNum);
               const count = allDivisionStats.filter(d => String(d.courtNo) === courtStr).length;
+              const isActive = selectedCourt === courtStr;
               return (
                 <button
                   key={courtNum}
-                  className={('btn ' + (selectedCourt === courtStr ? 'btn-primary' : 'btn-secondary'))}
+                  className={('btn ' + (isActive ? 'btn-primary' : 'btn-secondary'))}
                   style={{ 
                     fontSize: '0.85rem', 
-                    padding: '0.45rem 0.9rem', 
+                    padding: '0.35rem 0.85rem', 
                     borderRadius: '8px',
-                    backgroundColor: selectedCourt === courtStr ? '#3b82f6' : undefined,
-                    color: selectedCourt === courtStr ? '#ffffff' : undefined
+                    backgroundColor: isActive ? '#3b82f6' : undefined,
+                    color: isActive ? '#ffffff' : undefined
                   }}
                   onClick={() => setSelectedCourt(courtStr)}
                 >
-                  Court {courtNum} ({count})
+                  <CourtIcon /> Court {courtNum} ({count})
                 </button>
               );
             })}
@@ -214,502 +232,462 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
             {unassignedCount > 0 && (
               <button
                 className={('btn ' + (selectedCourt === 'unassigned' ? 'btn-primary' : 'btn-secondary'))}
-                style={{ fontSize: '0.85rem', padding: '0.45rem 0.9rem', borderRadius: '8px' }}
+                style={{ fontSize: '0.85rem', padding: '0.35rem 0.85rem', borderRadius: '8px' }}
                 onClick={() => setSelectedCourt('unassigned')}
               >
                 Unassigned ({unassignedCount})
               </button>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Overview Dashboard Stats (Filtered by Active Court) */}
-      <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-        <div className="card" style={{ padding: '1.1rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, height: '4px', width: '100%', backgroundColor: 'var(--primary)' }}></div>
-          <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 'bold', marginBottom: '0.25rem' }}>Total Divisions</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-main)' }}>{statsSummary.totalDivisions}</div>
-        </div>
-        
-        <div className="card" style={{ padding: '1.1rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, height: '4px', width: '100%', backgroundColor: 'var(--green-comp)' }}></div>
-          <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 'bold', marginBottom: '0.25rem' }}>Completed</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--green-comp)' }}>{statsSummary.completedDivisions}</div>
-        </div>
-
-        <div className="card" style={{ padding: '1.1rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, height: '4px', width: '100%', backgroundColor: 'var(--blue-comp)' }}></div>
-          <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 'bold', marginBottom: '0.25rem' }}>In Progress</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--blue-comp)' }}>{statsSummary.inProgressDivisions}</div>
-        </div>
-
-        <div className="card" style={{ padding: '1.1rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, height: '4px', width: '100%', backgroundColor: '#8b5cf6' }}></div>
-          <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 'bold', marginBottom: '0.25rem' }}>Total Matches</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-main)' }}>{statsSummary.totalMatches}</div>
-        </div>
-
-        <div className="card" style={{ padding: '1.1rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, height: '4px', width: '100%', backgroundColor: '#ec4899' }}></div>
-          <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 'bold', marginBottom: '0.25rem' }}>Completion Rate</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#ec4899' }}>{statsSummary.matchPercent}%</div>
-        </div>
-      </div>
-
-      {/* Main Content Layout: Divisions List & Division Results */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 340px) 1fr', gap: '1.5rem', alignItems: 'start' }}>
-        
-        {/* Left Column: Division Selector Sidebar */}
-        <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 'bold' }}>Divisions</h3>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              {selectedCourt === 'all' ? 'All Courts' : selectedCourt === 'unassigned' ? 'Unassigned' : ('Court ' + selectedCourt) }
+          {/* Compact Court Statistics Badges */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.8rem' }}>
+            <span style={{ padding: '0.25rem 0.6rem', borderRadius: '6px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontWeight: '600' }}>
+              {statsSummary.totalDivisions} Divisions
+            </span>
+            <span style={{ padding: '0.25rem 0.6rem', borderRadius: '6px', backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.25)', color: 'var(--green-comp)', fontWeight: '600' }}>
+              {statsSummary.completedDivisions} Completed
+            </span>
+            <span style={{ padding: '0.25rem 0.6rem', borderRadius: '6px', backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', color: 'var(--blue-comp)', fontWeight: '600' }}>
+              {statsSummary.inProgressDivisions} In Progress
+            </span>
+            <span style={{ padding: '0.25rem 0.6rem', borderRadius: '6px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: '600' }}>
+              {statsSummary.completedMatches}/{statsSummary.totalMatches} Matches ({statsSummary.matchPercent}%)
             </span>
           </div>
+        </div>
+      </div>
 
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search division..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem' }}
-          />
+      {/* 2. Main Results Card (Full Width) */}
+      <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        
+        {filteredDivisionStats.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+              No divisions found for {selectedCourt === 'all' ? 'any court' : selectedCourt === 'unassigned' ? 'unassigned courts' : ('Court ' + selectedCourt)}.
+            </div>
+            <div style={{ fontSize: '0.85rem' }}>
+              Assign courts in the Home or Brackets tab to see them listed here.
+            </div>
+          </div>
+        ) : (
+          <div>
+            {/* Division Selector & View Mode Switcher Header Bar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+              
+              {/* Left: Division Dropdown & Status */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <label htmlFor="results-div-select" style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    Division:
+                  </label>
+                  <select
+                    id="results-div-select"
+                    value={selectedDivisionId}
+                    onChange={(e) => setSelectedDivisionId(e.target.value)}
+                    className="form-control"
+                    style={{ fontWeight: '700', fontSize: '0.95rem', minWidth: '260px', width: 'auto' }}
+                  >
+                    {filteredDivisionStats.map(div => (
+                      <option key={div.id} value={div.id}>
+                        {div.name} ({div.competitorsCount} players) — {div.courtNo !== 'Unassigned' ? ('Court ' + div.courtNo) : 'Unassigned'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '600px', overflowY: 'auto', paddingRight: '0.25rem' }}>
-            {filteredDivisionStats.length === 0 ? (
-              <div style={{ padding: '1.5rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                No divisions found for active filter.
+                {selectedDivision && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      padding: '0.2rem 0.55rem',
+                      borderRadius: '6px',
+                      backgroundColor: selectedDivision.courtNo !== 'Unassigned' ? '#3b82f6' : '#9ca3af',
+                      color: '#ffffff',
+                      display: 'inline-flex',
+                      alignItems: 'center'
+                    }}>
+                      <CourtIcon /> {selectedDivision.courtNo !== 'Unassigned' ? ('Court ' + selectedDivision.courtNo) : 'Unassigned'}
+                    </span>
+
+                    <span className={('badge ' + (selectedDivision.status === 'Completed' ? 'badge-blue' : selectedDivision.status === 'In Progress' ? 'badge-red' : 'badge-gray'))} style={{ fontSize: '0.75rem' }}>
+                      {selectedDivision.status}
+                    </span>
+
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.25rem' }}>
+                      {selectedDivision.competitorsCount} Competitors • {selectedDivision.completedMatches} of {selectedDivision.totalMatches} Matches Completed
+                    </span>
+                  </div>
+                )}
               </div>
-            ) : (
-              filteredDivisionStats.map(div => {
-                const isSelected = div.id === selectedDivisionId;
 
-                return (
+              {/* Right: View Mode Toggle */}
+              <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', backgroundColor: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <button
-                    key={div.id}
-                    onClick={() => setSelectedDivisionId(div.id)}
+                    onClick={() => setViewMode('bracket')}
                     style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.4rem',
-                      padding: '0.75rem 0.85rem',
-                      borderRadius: '8px',
-                      border: isSelected ? '1.5px solid var(--primary)' : '1px solid var(--border-color)',
-                      backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.08)' : 'var(--bg-secondary)',
-                      color: 'var(--text-main)',
-                      textAlign: 'left',
+                      padding: '0.4rem 0.9rem',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      borderRadius: '6px',
+                      border: 'none',
+                      backgroundColor: viewMode === 'bracket' ? 'var(--primary)' : 'transparent',
+                      color: viewMode === 'bracket' ? 'white' : 'var(--text-muted)',
                       cursor: 'pointer',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.15s ease',
+                      display: 'inline-flex',
+                      alignItems: 'center'
                     }}
                   >
-                    <div style={{ fontWeight: isSelected ? 'bold' : '600', fontSize: '0.9rem', lineHeight: '1.2' }}>
-                      {div.name}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.2rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        {div.competitorsCount} Competitors
-                      </span>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <span style={{
-                          fontSize: '0.7rem',
-                          fontWeight: '700',
-                          padding: '0.15rem 0.45rem',
-                          borderRadius: '4px',
-                          backgroundColor: div.courtNo !== 'Unassigned' ? '#e0e7ff' : '#f3f4f6',
-                          color: div.courtNo !== 'Unassigned' ? '#3730a3' : '#6b7280',
-                          border: div.courtNo !== 'Unassigned' ? '1px solid #c7d2fe' : '1px solid #e5e7eb'
-                        }}>
-                          {div.courtNo !== 'Unassigned' ? ('Court ' + div.courtNo) : 'Unassigned'}
-                        </span>
-
-                        <span className={('badge ' + (div.status === 'Completed' ? 'badge-blue' : div.status === 'In Progress' ? 'badge-red' : 'badge-gray'))} style={{ fontSize: '0.7rem' }}>
-                          {div.status}
-                        </span>
-                      </div>
-                    </div>
+                    <TrophyIcon /> Updated Bracket
                   </button>
-                );
-              })
+                  <button
+                    onClick={() => setViewMode('podium')}
+                    style={{
+                      padding: '0.4rem 0.9rem',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      borderRadius: '6px',
+                      border: 'none',
+                      backgroundColor: viewMode === 'podium' ? 'var(--primary)' : 'transparent',
+                      color: viewMode === 'podium' ? 'white' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      display: 'inline-flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <MedalIcon /> Standings & Podium
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Division Switcher Chips (when 2 to 10 divisions in current court) */}
+            {filteredDivisionStats.length > 1 && filteredDivisionStats.length <= 10 && (
+              <div className="no-print" style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', padding: '0.6rem 0', borderBottom: '1px solid var(--border-color)' }}>
+                {filteredDivisionStats.map(div => {
+                  const isSelected = div.id === selectedDivisionId;
+                  return (
+                    <button
+                      key={div.id}
+                      onClick={() => setSelectedDivisionId(div.id)}
+                      style={{
+                        padding: '0.3rem 0.7rem',
+                        fontSize: '0.8rem',
+                        fontWeight: isSelected ? '700' : '500',
+                        borderRadius: '6px',
+                        border: isSelected ? '1.5px solid var(--primary)' : '1px solid var(--border-color)',
+                        backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.12)' : 'var(--bg-secondary)',
+                        color: isSelected ? 'var(--primary)' : 'var(--text-main)',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span>{div.name}</span>
+                      <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>
+                        ({div.completedMatches}/{div.totalMatches})
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
-          </div>
-        </div>
-        {/* Right Column: Selected Division Results & Brackets */}
-        <div className="card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
- {!selectedDivision ? (
- <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
- Select a division from the list to view standings, match results, and bracket view.
- </div>
- ) : (
- <div>
- {/* Header Info & View Mode Toggle */}
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '1.25rem' }}>
- <div>
- <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
- <h2 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 'bold' }}>
- {selectedDivision.name}
- </h2>
- 
- {/* Court Badge Header */}
- <span style={{
- fontSize: '0.78rem',
- fontWeight: '700',
- padding: '0.2rem 0.6rem',
- borderRadius: '6px',
- backgroundColor: selectedDivision.courtNo !== 'Unassigned' ? '#3b82f6' : '#9ca3af',
- color: '#ffffff',
- display: 'inline-flex',
- alignItems: 'center',
- gap: '0.3rem'
- }}>
- ??? {selectedDivision.courtNo !== 'Unassigned' ? ('Court ' + selectedDivision.courtNo) : 'Unassigned Court'}
- </span>
 
- <span className={('badge ' + (selectedDivision.status === 'Completed' ? 'badge-blue' : selectedDivision.status === 'In Progress' ? 'badge-red' : 'badge-gray'))}>
- {selectedDivision.status}
- </span>
- </div>
- <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
- {selectedDivision.competitorsCount} Competitors ? {selectedDivision.completedMatches} of {selectedDivision.totalMatches} Matches Completed
- </div>
- </div>
+            {/* MAIN CONTENT AREA */}
+            <div style={{ marginTop: '1rem' }}>
+              {selectedDivision && viewMode === 'bracket' && (
+                <div>
+                  {brackets[selectedDivision.id] && brackets[selectedDivision.id].length > 0 ? (
+                    <BracketView
+                      divisionId={selectedDivision.id}
+                      divisionName={selectedDivision.name}
+                      courtNo={selectedDivision.courtNo !== 'Unassigned' ? selectedDivision.courtNo : null}
+                      rounds={brackets[selectedDivision.id]}
+                      setBrackets={setBrackets}
+                      hideHeaderTitle={true}
+                    />
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '4rem 1rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0 }}>
+                        No bracket diagram generated yet for this division. Please generate the bracket in the <strong>Brackets</strong> tab.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
- {/* View Mode Toggle Buttons & Print */}
- <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
- <div style={{ display: 'flex', backgroundColor: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
- <button
- onClick={() => setViewMode('bracket')}
- style={{
- padding: '0.4rem 0.85rem',
- fontSize: '0.82rem',
- fontWeight: '600',
- borderRadius: '6px',
- border: 'none',
- backgroundColor: viewMode === 'bracket' ? 'var(--primary)' : 'transparent',
- color: viewMode === 'bracket' ? 'white' : 'var(--text-muted)',
- cursor: 'pointer',
- transition: 'all 0.15s ease',
- display: 'flex',
- alignItems: 'center',
- gap: '0.4rem'
- }}
- >
- ?? Updated Bracket
- </button>
- <button
- onClick={() => setViewMode('podium')}
- style={{
- padding: '0.4rem 0.85rem',
- fontSize: '0.82rem',
- fontWeight: '600',
- borderRadius: '6px',
- border: 'none',
- backgroundColor: viewMode === 'podium' ? 'var(--primary)' : 'transparent',
- color: viewMode === 'podium' ? 'white' : 'var(--text-muted)',
- cursor: 'pointer',
- transition: 'all 0.15s ease',
- display: 'flex',
- alignItems: 'center',
- gap: '0.4rem'
- }}
- >
- ?? Standings & Podium
- </button>
- </div>
-
- <button className="btn btn-secondary btn-sm no-print" onClick={() => window.print()}>
- ??? Print
- </button>
- </div>
- </div>
-
- {/* View Mode 1: BRACKET VIEW */}
- {viewMode === 'bracket' && (
- <div>
- {brackets[selectedDivision.id] && brackets[selectedDivision.id].length > 0 ? (
- <BracketView
- divisionId={selectedDivision.id}
- divisionName={selectedDivision.name}
- courtNo={selectedDivision.courtNo !== 'Unassigned' ? selectedDivision.courtNo : null}
- rounds={brackets[selectedDivision.id]}
- setBrackets={setBrackets}
- />
- ) : (
- <div style={{ textAlign: 'center', padding: '3rem 1rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
- <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0 }}>
- No bracket diagram available yet for this division. Generate brackets in the <strong>Brackets</strong> tab!
- </p>
- </div>
- )}
- </div>
- )}
-
- {/* View Mode 2: STANDINGS & PODIUM */}
- {viewMode === 'podium' && (
- <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
- 
- {/* Podium Standings Section */}
- {selectedDivision.podium ? (
- <div>
- <h3 style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
- ?? Medal Podium
- </h3>
- 
- <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
- 
- {/* 1st Place (Gold) */}
- {selectedDivision.podium.first && (
- <div style={{ 
- display: 'flex', 
- alignItems: 'center', 
- padding: '0.85rem 1.25rem', 
- borderRadius: '8px', 
- border: '1.5px solid #eab308', 
- background: 'linear-gradient(90deg, rgba(234, 179, 8, 0.12) 0%, rgba(255, 255, 255, 0) 100%)',
- position: 'relative'
- }}>
- <div style={{ 
- width: '36px', 
- height: '36px', 
- borderRadius: '50%', 
- backgroundColor: '#eab308', 
- display: 'flex', 
- alignItems: 'center', 
- justifyContent: 'center',
- color: 'white',
- fontWeight: 'bold',
- fontSize: '1rem',
- marginRight: '1rem',
- boxShadow: '0 2px 4px rgba(234, 179, 8, 0.3)'
- }}>
- 1st
- </div>
- <div style={{ flex: 1 }}>
- <div style={{ fontWeight: 'bold', fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}>
- {selectedDivision.podium.first.name}
- {renderFlag(selectedDivision.podium.first.country)}
- </div>
- <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
- {selectedDivision.podium.first.club} ? {selectedDivision.podium.first.rank || 'Competitor'}
- </div>
- </div>
- <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#ca8a04', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
- ?? GOLD MEDAL
- </div>
- </div>
- )}
-
- {/* 2nd Place (Silver) */}
- {selectedDivision.podium.second && (
- <div style={{ 
- display: 'flex', 
- alignItems: 'center', 
- padding: '0.85rem 1.25rem', 
- borderRadius: '8px', 
- border: '1.5px solid #94a3b8', 
- background: 'linear-gradient(90deg, rgba(148, 163, 184, 0.12) 0%, rgba(255, 255, 255, 0) 100%)',
- position: 'relative'
- }}>
- <div style={{ 
- width: '36px', 
- height: '36px', 
- borderRadius: '50%', 
- backgroundColor: '#94a3b8', 
- display: 'flex', 
- alignItems: 'center', 
- justifyContent: 'center',
- color: 'white',
- fontWeight: 'bold',
- fontSize: '1rem',
- marginRight: '1rem',
- boxShadow: '0 2px 4px rgba(148, 163, 184, 0.3)'
- }}>
- 2nd
- </div>
- <div style={{ flex: 1 }}>
- <div style={{ fontWeight: 'bold', fontSize: '1rem', display: 'flex', alignItems: 'center' }}>
- {selectedDivision.podium.second.name}
- {renderFlag(selectedDivision.podium.second.country)}
- </div>
- <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
- {selectedDivision.podium.second.club} ? {selectedDivision.podium.second.rank || 'Competitor'}
- </div>
- </div>
- <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
- ?? SILVER MEDAL
- </div>
- </div>
- )}
-
- {/* 3rd Place (Bronze A) */}
- {selectedDivision.podium.bronze1 && (
- <div style={{ 
- display: 'flex', 
- alignItems: 'center', 
- padding: '0.85rem 1.25rem', 
- borderRadius: '8px', 
- border: '1px solid #cd7f32', 
- background: 'linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, rgba(255, 255, 255, 0) 100%)',
- position: 'relative'
- }}>
- <div style={{ 
- width: '36px', 
- height: '36px', 
- borderRadius: '50%', 
- backgroundColor: '#cd7f32', 
- display: 'flex', 
- alignItems: 'center', 
- justifyContent: 'center',
- color: 'white',
- fontWeight: 'bold',
- fontSize: '1rem',
- marginRight: '1rem',
- boxShadow: '0 2px 4px rgba(205, 127, 50, 0.3)'
- }}>
- 3rd
- </div>
- <div style={{ flex: 1 }}>
- <div style={{ fontWeight: 'bold', fontSize: '1rem', display: 'flex', alignItems: 'center' }}>
- {selectedDivision.podium.bronze1.name}
- {renderFlag(selectedDivision.podium.bronze1.country)}
- </div>
- <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
- {selectedDivision.podium.bronze1.club} ? {selectedDivision.podium.bronze1.rank || 'Competitor'}
- </div>
- </div>
- <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#a05c1e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
- ?? BRONZE MEDAL
- </div>
- </div>
- )}
-                        {/* 3rd Place (Bronze B) */}
-                        {selectedDivision.podium.bronze2 && (
+              {selectedDivision && viewMode === 'podium' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  
+                  {/* Medal Podium Section */}
+                  {selectedDivision.podium ? (
+                    <div>
+                      <h3 style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center' }}>
+                        <MedalIcon /> Medal Podium Standings
+                      </h3>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        
+                        {/* 1st Place (Gold) */}
+                        {selectedDivision.podium.first && (
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center', 
                             padding: '0.85rem 1.25rem', 
                             borderRadius: '8px', 
-                            border: '1px solid #cd7f32', 
-                            background: 'linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, rgba(255, 255, 255, 0) 100%)',
+                            border: '1.5px solid #eab308', 
+                            background: 'linear-gradient(90deg, rgba(234, 179, 8, 0.12) 0%, rgba(255, 255, 255, 0) 100%)',
                             position: 'relative'
                           }}>
                             <div style={{ 
                               width: '36px', 
                               height: '36px', 
                               borderRadius: '50%', 
-                              backgroundColor: '#cd7f32', 
+                              backgroundColor: '#eab308', 
                               display: 'flex', 
                               alignItems: 'center', 
-                              justifyContent: 'center',
-                              color: 'white',
-                              fontWeight: 'bold',
-                              fontSize: '1rem',
+                              justifyContent: 'center', 
+                              color: 'white', 
+                              fontWeight: 'bold', 
+                              fontSize: '1rem', 
                               marginRight: '1rem',
-                              boxShadow: '0 2px 4px rgba(205, 127, 50, 0.3)'
+                              boxShadow: '0 2px 4px rgba(234, 179, 8, 0.3)'
+                            }}>
+                              1st
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 'bold', fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}>
+                                {selectedDivision.podium.first.name}
+                                {renderFlag(selectedDivision.podium.first.country)}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                {selectedDivision.podium.first.club} • {selectedDivision.podium.first.rank || 'Competitor'}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#ca8a04', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              GOLD MEDAL
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 2nd Place (Silver) */}
+                        {selectedDivision.podium.second && (
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            padding: '0.85rem 1.25rem', 
+                            borderRadius: '8px', 
+                            border: '1.5px solid #94a3b8', 
+                            background: 'linear-gradient(90deg, rgba(148, 163, 184, 0.12) 0%, rgba(255, 255, 255, 0) 100%)',
+                            position: 'relative'
+                          }}>
+                            <div style={{ 
+                              width: '36px', 
+                              height: '36px', 
+                              borderRadius: '50%', 
+                              backgroundColor: '#94a3b8', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              color: 'white', 
+                              fontWeight: 'bold', 
+                              fontSize: '1rem', 
+                              marginRight: '1rem',
+                              boxShadow: '0 2px 4px rgba(148, 163, 184, 0.3)'
+                            }}>
+                              2nd
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 'bold', fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}>
+                                {selectedDivision.podium.second.name}
+                                {renderFlag(selectedDivision.podium.second.country)}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                {selectedDivision.podium.second.club} • {selectedDivision.podium.second.rank || 'Competitor'}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              SILVER MEDAL
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3rd Place A (Bronze) */}
+                        {selectedDivision.podium.bronze1 && (
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            padding: '0.85rem 1.25rem', 
+                            borderRadius: '8px', 
+                            border: '1.5px solid #d97706', 
+                            background: 'linear-gradient(90deg, rgba(217, 119, 6, 0.1) 0%, rgba(255, 255, 255, 0) 100%)',
+                            position: 'relative'
+                          }}>
+                            <div style={{ 
+                              width: '36px', 
+                              height: '36px', 
+                              borderRadius: '50%', 
+                              backgroundColor: '#d97706', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              color: 'white', 
+                              fontWeight: 'bold', 
+                              fontSize: '1rem', 
+                              marginRight: '1rem',
+                              boxShadow: '0 2px 4px rgba(217, 119, 6, 0.3)'
                             }}>
                               3rd
                             </div>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: 'bold', fontSize: '1rem', display: 'flex', alignItems: 'center' }}>
+                              <div style={{ fontWeight: 'bold', fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}>
+                                {selectedDivision.podium.bronze1.name}
+                                {renderFlag(selectedDivision.podium.bronze1.country)}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                {selectedDivision.podium.bronze1.club} • {selectedDivision.podium.bronze1.rank || 'Competitor'}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              BRONZE MEDAL
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3rd Place B (Bronze) */}
+                        {selectedDivision.podium.bronze2 && (
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            padding: '0.85rem 1.25rem', 
+                            borderRadius: '8px', 
+                            border: '1.5px solid #d97706', 
+                            background: 'linear-gradient(90deg, rgba(217, 119, 6, 0.1) 0%, rgba(255, 255, 255, 0) 100%)',
+                            position: 'relative'
+                          }}>
+                            <div style={{ 
+                              width: '36px', 
+                              height: '36px', 
+                              borderRadius: '50%', 
+                              backgroundColor: '#d97706', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              color: 'white', 
+                              fontWeight: 'bold', 
+                              fontSize: '1rem', 
+                              marginRight: '1rem',
+                              boxShadow: '0 2px 4px rgba(217, 119, 6, 0.3)'
+                            }}>
+                              3rd
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 'bold', fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}>
                                 {selectedDivision.podium.bronze2.name}
                                 {renderFlag(selectedDivision.podium.bronze2.country)}
                               </div>
                               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                {selectedDivision.podium.bronze2.club} ? {selectedDivision.podium.bronze2.rank || 'Competitor'}
+                                {selectedDivision.podium.bronze2.club} • {selectedDivision.podium.bronze2.rank || 'Competitor'}
                               </div>
                             </div>
-                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#a05c1e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              ?? BRONZE MEDAL
+                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              BRONZE MEDAL
                             </div>
                           </div>
                         )}
+
                       </div>
                     </div>
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '2rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
-                        Standings will be compiled once matches begin! Start scoring in the <strong>Brackets</strong> tab or view the <strong>Updated Bracket</strong> diagram above.
-                      </p>
+                    <div style={{ textAlign: 'center', padding: '3rem 1rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '0.4rem' }}>
+                        Medal Standings Pending
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        Complete semifinal and final matches in the <strong>Updated Bracket</strong> to determine gold, silver, and bronze medalists.
+                      </div>
                     </div>
                   )}
 
-                  {/* Match History Table */}
+                  {/* Completed Matches Section */}
                   {selectedDivision.matchHistory.length > 0 && (
                     <div>
                       <h3 style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-                        ?? Completed Matches
+                        Completed Matches ({selectedDivision.matchHistory.length})
                       </h3>
                       
                       <div className="table-container">
- <table className="custom-table" style={{ fontSize: '0.85rem' }}>
- <thead>
- <tr>
- <th>Match</th>
- <th>Competitors & Scores</th>
- <th>Winner</th>
- <th>Result Type</th>
- </tr>
- </thead>
- <tbody>
- {selectedDivision.matchHistory.map(m => {
- const p1Winner = m.winnerId === m.p1?.id;
- const p2Winner = m.winnerId === m.p2?.id;
+                        <table className="custom-table" style={{ fontSize: '0.85rem' }}>
+                          <thead>
+                            <tr>
+                              <th>Match</th>
+                              <th>Competitors & Scores</th>
+                              <th>Winner</th>
+                              <th>Result Type</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedDivision.matchHistory.map(m => {
+                              const p1Winner = m.winnerId === m.p1?.id;
+                              const p2Winner = m.winnerId === m.p2?.id;
 
- return (
- <tr key={m.id}>
- <td style={{ fontWeight: 'bold' }}>#{m.matchNo}</td>
- <td>
- <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
- <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: p1Winner ? 'var(--blue-comp-light)' : 'transparent', color: p1Winner ? 'var(--blue-comp)' : 'inherit', fontWeight: p1Winner ? 'bold' : 'normal' }}>
- <span>
- {m.p1?.name || 'TBD'}
- {m.p1 && renderFlag(m.p1.country)}
- </span>
- <span>{m.score1 !== null ? m.score1 : '-'}</span>
- </div>
- <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: p2Winner ? 'var(--red-comp-light)' : 'transparent', color: p2Winner ? 'var(--red-comp)' : 'inherit', fontWeight: p2Winner ? 'bold' : 'normal' }}>
- <span>
- {m.p2?.name || 'TBD'}
- {m.p2 && renderFlag(m.p2.country)}
- </span>
- <span>{m.score2 !== null ? m.score2 : '-'}</span>
- </div>
- {m.roundScores && (
- <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem', paddingLeft: '0.4rem', fontStyle: 'italic' }}>
- Rounds: {m.roundScores.map((r, i) => r.blue !== null && r.red !== null ? 'R' + (i + 1) + ': ' + r.blue + '-' + r.red : null).filter(Boolean).join(', ')}
- </div>
- )}
- </div>
- </td>
- <td style={{ fontWeight: 'bold', color: 'var(--primary)' }}>
- {m.winnerId === m.p1?.id ? m.p1?.name : (m.winnerId === m.p2?.id ? m.p2?.name : 'TBD')}
- </td>
- <td>
- <span className="badge badge-blue">
- {m.winType}
- </span>
- </td>
- </tr>
- );
- })}
- </tbody>
- </table>
- </div>
- </div>
- )}
- </div>
- )}
- </div>
- )}
- </div>
- </div>
- 
- </div>
- );
+                              return (
+                                <tr key={m.id}>
+                                  <td style={{ fontWeight: 'bold' }}>#{m.matchNo}</td>
+                                  <td>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: p1Winner ? 'var(--blue-comp-light)' : 'transparent', color: p1Winner ? 'var(--blue-comp)' : 'inherit', fontWeight: p1Winner ? 'bold' : 'normal' }}>
+                                        <span>
+                                          {m.p1?.name || 'TBD'}
+                                          {m.p1 && renderFlag(m.p1.country)}
+                                        </span>
+                                        <span>{m.score1 !== null ? m.score1 : '-'}</span>
+                                      </div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: p2Winner ? 'var(--red-comp-light)' : 'transparent', color: p2Winner ? 'var(--red-comp)' : 'inherit', fontWeight: p2Winner ? 'bold' : 'normal' }}>
+                                        <span>
+                                          {m.p2?.name || 'TBD'}
+                                          {m.p2 && renderFlag(m.p2.country)}
+                                        </span>
+                                        <span>{m.score2 !== null ? m.score2 : '-'}</span>
+                                      </div>
+                                      {m.roundScores && (
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem', paddingLeft: '0.4rem', fontStyle: 'italic' }}>
+                                          Rounds: {m.roundScores.map((r, i) => r.blue !== null && r.red !== null ? 'R' + (i + 1) + ': ' + r.blue + '-' + r.red : null).filter(Boolean).join(', ')}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td style={{ fontWeight: 'bold', color: 'var(--primary)' }}>
+                                    {m.winnerId === m.p1?.id ? m.p1?.name : (m.winnerId === m.p2?.id ? m.p2?.name : 'TBD')}
+                                  </td>
+                                  <td>
+                                    <span className="badge badge-blue">
+                                      {m.winType}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default ResultsView;
