@@ -30,9 +30,16 @@ export function buildAcademySeparatedSlots(competitors, bracketSize) {
   const slots = Array(bracketSize).fill(null);
   if (!competitors || competitors.length === 0) return slots;
 
+  // 0. Initial random shuffle of competitors pool
+  const pool = [...competitors];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
   // 1. Group competitors by club/academy
   const clubGroups = {};
-  competitors.forEach(c => {
+  pool.forEach(c => {
     const clubName = (c.club || 'Independent').trim();
     const clubKey = clubName.toLowerCase();
     if (!clubGroups[clubKey]) {
@@ -50,11 +57,14 @@ export function buildAcademySeparatedSlots(competitors, bracketSize) {
     }
   });
 
-  // Sort clubs by number of members descending (largest academy first)
-  const sortedClubs = Object.values(clubGroups).sort((a, b) => b.members.length - a.members.length);
+  // Sort clubs by number of members descending with a random tie-breaker for equal size clubs
+  const sortedClubs = Object.values(clubGroups).sort((a, b) => {
+    const diff = b.members.length - a.members.length;
+    if (diff !== 0) return diff;
+    return Math.random() - 0.5;
+  });
 
   // Bit-reversed slot placement order (0, m/2, m/4, 3m/4, etc.)
-  // This places successive items into max-distanced quadrants
   const numBits = Math.log2(bracketSize);
   const bitRevSlots = [];
   for (let i = 0; i < bracketSize; i++) {
@@ -66,6 +76,10 @@ export function buildAcademySeparatedSlots(competitors, bracketSize) {
     }
     bitRevSlots.push(rev);
   }
+
+  // Randomize starting quadrant offset for bitRevSlots so regenerate doesn't always start at slot 0
+  const randomSlotOffset = Math.floor(Math.random() * bracketSize);
+  const randomizedBitRevSlots = bitRevSlots.map(s => (s + randomSlotOffset) % bracketSize);
 
   // Interleave members from clubs in round-robin fashion
   const orderedComps = [];
@@ -84,7 +98,7 @@ export function buildAcademySeparatedSlots(competitors, bracketSize) {
 
   // Assign competitors to max-distanced slots
   for (let i = 0; i < orderedComps.length; i++) {
-    const slotIdx = bitRevSlots[i];
+    const slotIdx = randomizedBitRevSlots[i];
     slots[slotIdx] = orderedComps[i];
   }
 
@@ -96,7 +110,7 @@ export function buildAcademySeparatedSlots(competitors, bracketSize) {
     const p1 = slots[idx1];
     const p2 = slots[idx2];
 
-    const isSameClub = p1 && p2 && 
+    const isSameClub = p1 && p2 &&
       p1.club && p2.club &&
       p1.club.trim().toLowerCase() === p2.club.trim().toLowerCase() &&
       p1.club.trim().toLowerCase() !== 'independent';
@@ -128,6 +142,15 @@ export function buildAcademySeparatedSlots(competitors, bracketSize) {
         }
         if (swapped) break;
       }
+    }
+  }
+
+  // 3. Random 50% coin-flip swap between p1 and p2 in each match to randomize red/blue sides on regenerate
+  for (let mIdx = 0; mIdx < numMatches; mIdx++) {
+    if (Math.random() < 0.5) {
+      const idx1 = mIdx * 2;
+      const idx2 = mIdx * 2 + 1;
+      [slots[idx1], slots[idx2]] = [slots[idx2], slots[idx1]];
     }
   }
 
