@@ -526,9 +526,12 @@ function App() {
         )}
 
         {activeTab === 'results' && (
-          <ResultsView 
+          <ResultsView
             divisions={divisions}
             brackets={brackets}
+            divisionCourts={divisionCourts}
+            totalCourts={totalCourts}
+            setBrackets={setBrackets}
           />
         )}
       </main>
