@@ -5,14 +5,21 @@ import { nocToIso } from '../utils/countries';
 
 // Helper to draw a perfect step path with rounded corners
 const getStepPath = (x1, y1, x2, y2) => {
-  const xmid = (x1 + x2) / 2;
-  const r = 8; // rounded corner radius
-  if (Math.abs(y1 - y2) < 5) {
+  const dx = Math.abs(x2 - x1);
+  const dy = Math.abs(y2 - y1);
+  if (dy < 2) {
     return `M ${x1} ${y1} H ${x2}`;
   }
+
+  const xmid = (x1 + x2) / 2;
+  const r = Math.min(8, dy / 2, dx / 2);
   const isGoingDown = y2 > y1;
-  const dy = isGoingDown ? r : -r;
-  return `M ${x1} ${y1} H ${xmid - r} Q ${xmid} ${y1}, ${xmid} ${y1 + dy} V ${y2 - dy} Q ${xmid} ${y2}, ${xmid + r} ${y2} H ${x2}`;
+  const vertDir = isGoingDown ? 1 : -1;
+
+  const y1_corner = y1 + r * vertDir;
+  const y2_corner = y2 - r * vertDir;
+
+  return `M ${x1} ${y1} H ${xmid - r} Q ${xmid} ${y1}, ${xmid} ${y1_corner} V ${y2_corner} Q ${xmid} ${y2}, ${xmid + r} ${y2} H ${x2}`;
 };
 
 function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, onRegenerate }) {
