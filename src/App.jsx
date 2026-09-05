@@ -146,6 +146,7 @@ function App() {
 
 
   const [activeTab, setActiveTab] = useState('competitors');
+  const [regenerateToast, setRegenerateToast] = useState(null);
   const [selectedDivisionId, setSelectedDivisionId] = useState('');
 
   // Auto-save state
@@ -376,6 +377,12 @@ function App() {
 
         {activeTab === 'divisions' && (
           <div className="card">
+            {regenerateToast && (
+              <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', backgroundColor: '#dbeafe', color: '#1e40af', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>Bracket regenerated & shuffled for: <strong>{regenerateToast}</strong></span>
+                <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>(Same academy players separated)</span>
+              </div>
+            )}
             <div className="card-title">
               <span>Active Divisions ({Object.keys(divisions).length})</span>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.75rem' }} className="no-print">
@@ -435,9 +442,15 @@ function App() {
                             <button 
                               className="btn btn-secondary btn-sm" 
                               onClick={() => {
+                                const isAlreadyGenerated = !!brackets[div.id];
                                 handleGenerateBracket(div.id);
-                                setSelectedDivisionId(div.id);
-                                setActiveTab('brackets');
+                                if (!isAlreadyGenerated) {
+                                  setSelectedDivisionId(div.id);
+                                  setActiveTab('brackets');
+                                } else {
+                                  setRegenerateToast(div.name);
+                                  setTimeout(() => setRegenerateToast(null), 3000);
+                                }
                               }}
                               disabled={div.count < 2}
                             >
@@ -500,6 +513,7 @@ function App() {
                 courtNo={divisionCourts[selectedDivisionId]}
                 rounds={brackets[selectedDivisionId]}
                 setBrackets={setBrackets}
+                onRegenerate={() => handleGenerateBracket(selectedDivisionId)}
               />
             ) : (
               <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>

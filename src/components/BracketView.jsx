@@ -15,7 +15,7 @@ const getStepPath = (x1, y1, x2, y2) => {
   return `M ${x1} ${y1} H ${xmid - r} Q ${xmid} ${y1}, ${xmid} ${y1 + dy} V ${y2 - dy} Q ${xmid} ${y2}, ${xmid + r} ${y2} H ${x2}`;
 };
 
-function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets }) {
+function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, onRegenerate }) {
   const [selectedMatch, setSelectedMatch] = useState(null);
 
   // Hover Path Tracking State
@@ -545,6 +545,11 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets })
       <div className="no-print bracket-header">
         <h4 style={{ color: 'var(--text-muted)' }}>{divisionName}{courtNo ? ` - Court ${courtNo}` : ''} Bracket</h4>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {onRegenerate && (
+            <button className="btn btn-secondary btn-sm" onClick={onRegenerate} title="Re-shuffle bracket and separate same-academy players">
+              Regenerate / Shuffle
+            </button>
+          )}
           <button className="btn btn-secondary btn-sm" onClick={() => handleZoom(1.15)}>Zoom +</button>
           <button className="btn btn-secondary btn-sm" onClick={() => handleZoom(0.85)}>Zoom -</button>
           <button className="btn btn-secondary btn-sm" onClick={handleResetZoom}>Reset View</button>

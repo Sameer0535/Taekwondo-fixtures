@@ -155,6 +155,9 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
   // Bulk Import State
   const [bulkText, setBulkText] = useState('');
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [bulkGender, setBulkGender] = useState('Male');
+  const [bulkAgeCategory, setBulkAgeCategory] = useState('Senior');
+  const [bulkWeightClass, setBulkWeightClass] = useState('Under 68kg');
 
   // Dynamic selector helpers
   const handleGenderChange = (newGender) => {
@@ -205,18 +208,23 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
 
     lines.forEach(line => {
       if (!line.trim()) return;
-      
-      // Expected format: Name, Club, Gender, AgeCategory, WeightClass, CountryCode
       const parts = line.split(',').map(p => p.trim());
       if (parts[0]) {
+        const name = parts[0];
+        const club = parts[1] || 'Independent';
+        const gender = parts.length >= 5 ? parts[2] : bulkGender;
+        const ageCategory = parts.length >= 5 ? parts[3] : bulkAgeCategory;
+        const weightClass = parts.length >= 5 ? parts[4] : (tournamentMode === 'group4' ? '' : bulkWeightClass);
+        const country = parts.length >= 6 ? parts[5].toUpperCase() : 'IND';
+
         newComps.push({
           id: 'c_' + Math.random().toString(36).substr(2, 9),
-          name: parts[0],
-          club: parts[1] || 'Independent',
-          gender: parts[2] || 'Male',
-          ageCategory: parts[3] || 'Senior',
-          weightClass: parts[4] || 'Under 68kg',
-          country: parts[5] ? parts[5].toUpperCase() : 'IND',
+          name,
+          club,
+          gender,
+          ageCategory,
+          weightClass,
+          country,
           rank: '',
           seed: null
         });
@@ -227,7 +235,8 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
       setCompetitors(prev => [...prev, ...newComps]);
       setBulkText('');
       setShowBulkImport(false);
-      alert(`Successfully imported ${newComps.length} competitors!`);
+      const targetDiv = tournamentMode === 'group4' ? `${bulkGender} ${bulkAgeCategory}` : `${bulkGender} ${bulkAgeCategory} ${bulkWeightClass}`;
+      alert(`Successfully imported ${newComps.length} competitors into ${targetDiv}!`);
     } else {
       alert("No valid competitors found in the pasted text.");
     }
@@ -528,20 +537,97 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
       {/* Main Panel: Competitors Table */}
       <div className="card">
         {showBulkImport && (
-          <div style={{ marginBottom: '1.5rem', backgroundColor: 'var(--bg-primary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-            <h4>Bulk Competitor Import</h4>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-              Paste comma-separated rows. Format: <em>Name, Club, Gender, AgeCategory, WeightClass</em>
-            </p>
+          <div style={{ marginBottom: '1.5rem', backgroundColor: 'var(--bg-primary)', padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+            <h4 style={{ marginBottom: '0.75rem', fontSize: '1.1rem', fontWeight: 700 }}>Bulk Competitor Import</h4>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: tournamentMode === 'group4' ? '1fr 1fr' : '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.75rem' }}>Gender</label>
+                <select 
+                  className="form-control" 
+                  style={{ fontSize: '0.85rem' }} 
+                  value={bulkGender} 
+                  onChange={e => {
+                    const g = e.target.value;
+                    setBulkGender(g);
+                    if (tournamentMode !== 'group4') {
+                      const weights = WEIGHT_CATEGORIES[bulkAgeCategory]?.[g] || [];
+                      if (weights.length > 0) setBulkWeightClass(weights[0].value);
+                    }
+                  }}
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.75rem' }}>Age Class / Division</label>
+                <select 
+                  className="form-control" 
+                  style={{ fontSize: '0.85rem' }} 
+                  value={bulkAgeCategory} 
+                  onChange={e => {
+                    const a = e.target.value;
+                    setBulkAgeCategory(a);
+                    if (tournamentMode !== 'group4') {
+                      const weights = WEIGHT_CATEGORIES[a]?.[bulkGender] || [];
+                      if (weights.length > 0) setBulkWeightClass(weights[0].value);
+                    }
+                  }}
+                >
+                  {tournamentMode === 'group4' ? (
+                    <>
+                      <option value="U-4">U-4</option>
+                      <option value="U-6">U-6</option>
+                      <option value="U-8">U-8</option>
+                      <option value="U-10">U-10</option>
+                      <option value="U-12">U-12</option>
+                      <option value="U-15">U-15</option>
+                      <option value="U-18">U-18</option>
+                      <option value="A-18">A-18</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="Sub-Junior">Sub-Junior</option>
+                      <option value="Cadet">Cadet (12-14)</option>
+                      <option value="Junior">Junior (15-17)</option>
+                      <option value="Senior">Senior (18+)</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              {tournamentMode !== 'group4' && (
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Weight Division</label>
+                  <select 
+                    className="form-control" 
+                    style={{ fontSize: '0.85rem' }} 
+                    value={bulkWeightClass} 
+                    onChange={e => setBulkWeightClass(e.target.value)}
+                  >
+                    {(WEIGHT_CATEGORIES[bulkAgeCategory]?.[bulkGender] || []).map(wc => (
+                      <option key={wc.value} value={wc.value}>{wc.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600 }}>
+              Competitor List (Format: <em>Name, Academy</em> - one per line)
+            </label>
             <textarea
               className="form-control"
               rows="6"
-              style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+              style={{ fontFamily: 'monospace', fontSize: '0.85rem', marginTop: '0.25rem' }}
               value={bulkText}
               onChange={e => setBulkText(e.target.value)}
-              placeholder="Lee Dae-hoon, Seoul TKD, Male, Senior, Under 68kg&#10;Jade Jones, Manchester Elite, Female, Senior, Under 57kg"
+              placeholder="Lee Dae-hoon, Seoul TKD&#10;Alexei Denisenko, Rostov Club&#10;Joel Gonzalez, Madrid High Performance"
             />
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.7rem' }}>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.85rem' }}>
               <button className="btn btn-primary btn-sm" onClick={handleBulkImport}>Import List</button>
               <button className="btn btn-secondary btn-sm" onClick={() => setShowBulkImport(false)}>Cancel</button>
             </div>

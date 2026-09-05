@@ -21,6 +21,119 @@ export function getSeedingOrder(size) {
  * @param {Array} competitors - Array of competitor objects { id, name, seed, club, division }
  * @returns {Array} rounds - Array of rounds, where each round is an array of matches.
  */
+/**
+ * Distributes competitors across bracket slots such that competitors from the same
+ * academy/club are placed as far apart as possible in opposite halves / quarters
+ * of the bracket tree and never face each other in Round 1.
+ */
+export function buildAcademySeparatedSlots(competitors, bracketSize) {
+  const slots = Array(bracketSize).fill(null);
+  if (!competitors || competitors.length === 0) return slots;
+
+  // 1. Group competitors by club/academy
+  const clubGroups = {};
+  competitors.forEach(c => {
+    const clubName = (c.club || 'Independent').trim();
+    const clubKey = clubName.toLowerCase();
+    if (!clubGroups[clubKey]) {
+      clubGroups[clubKey] = { name: clubName, members: [] };
+    }
+    clubGroups[clubKey].members.push(c);
+  });
+
+  // Shuffle members within each club group for randomness on regenerate
+  Object.values(clubGroups).forEach(group => {
+    const members = group.members;
+    for (let i = members.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [members[i], members[j]] = [members[j], members[i]];
+    }
+  });
+
+  // Sort clubs by number of members descending (largest academy first)
+  const sortedClubs = Object.values(clubGroups).sort((a, b) => b.members.length - a.members.length);
+
+  // Bit-reversed slot placement order (0, m/2, m/4, 3m/4, etc.)
+  // This places successive items into max-distanced quadrants
+  const numBits = Math.log2(bracketSize);
+  const bitRevSlots = [];
+  for (let i = 0; i < bracketSize; i++) {
+    let rev = 0;
+    for (let b = 0; b < numBits; b++) {
+      if ((i >> b) & 1) {
+        rev |= (1 << (numBits - 1 - b));
+      }
+    }
+    bitRevSlots.push(rev);
+  }
+
+  // Interleave members from clubs in round-robin fashion
+  const orderedComps = [];
+  let remaining = true;
+  let memberIdx = 0;
+  while (remaining) {
+    remaining = false;
+    sortedClubs.forEach(group => {
+      if (memberIdx < group.members.length) {
+        orderedComps.push(group.members[memberIdx]);
+        remaining = true;
+      }
+    });
+    memberIdx++;
+  }
+
+  // Assign competitors to max-distanced slots
+  for (let i = 0; i < orderedComps.length; i++) {
+    const slotIdx = bitRevSlots[i];
+    slots[slotIdx] = orderedComps[i];
+  }
+
+  // 2. Post-processing pass: Fix any Round 1 same-academy matchups
+  const numMatches = bracketSize / 2;
+  for (let mIdx = 0; mIdx < numMatches; mIdx++) {
+    const idx1 = mIdx * 2;
+    const idx2 = mIdx * 2 + 1;
+    const p1 = slots[idx1];
+    const p2 = slots[idx2];
+
+    const isSameClub = p1 && p2 && 
+      p1.club && p2.club &&
+      p1.club.trim().toLowerCase() === p2.club.trim().toLowerCase() &&
+      p1.club.trim().toLowerCase() !== 'independent';
+
+    if (isSameClub) {
+      let swapped = false;
+      for (let targetMatch = 0; targetMatch < numMatches; targetMatch++) {
+        if (targetMatch === mIdx) continue;
+
+        for (let targetPos of [0, 1]) {
+          const targetIdx = targetMatch * 2 + targetPos;
+          const targetComp = slots[targetIdx];
+          const otherTargetComp = slots[targetMatch * 2 + (1 - targetPos)];
+
+          const p1Club = p1.club.trim().toLowerCase();
+          const targetClub = targetComp ? targetComp.club?.trim().toLowerCase() : null;
+          const otherTargetClub = otherTargetComp ? otherTargetComp.club?.trim().toLowerCase() : null;
+          const p2Club = p2.club.trim().toLowerCase();
+
+          const match1Ok = !targetClub || targetClub !== p1Club;
+          const match2Ok = !otherTargetClub || !p2Club || p2Club !== otherTargetClub;
+
+          if (match1Ok && match2Ok) {
+            slots[idx2] = targetComp;
+            slots[targetIdx] = p2;
+            swapped = true;
+            break;
+          }
+        }
+        if (swapped) break;
+      }
+    }
+  }
+
+  return slots;
+}
+
 export function generateBracket(competitors) {
   if (!competitors || competitors.length === 0) return [];
 
@@ -31,30 +144,8 @@ export function generateBracket(competitors) {
     m *= 2;
   }
 
-  // Get standard seeding order slots
-  const seedingOrder = getSeedingOrder(m);
-
-  // Map competitors to their seeding slots
-  const slots = Array(m).fill(null);
-
-  // Fisher-Yates shuffle the entire pool of competitors so clicking Regenerate always creates fresh matches
-  const shuffledComps = [...competitors];
-  for (let i = shuffledComps.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledComps[i], shuffledComps[j]] = [shuffledComps[j], shuffledComps[i]];
-  }
-
-  // Distribute the shuffled competitors into the seeding slots
-  // This spaces out the initial matches and distributes byes nicely
-  for (let i = 0; i < n; i++) {
-    // Standard seeding order determines where each entrant goes
-    const slotIdx = seedingOrder.indexOf(i + 1);
-    if (slotIdx !== -1) {
-      slots[slotIdx] = shuffledComps[i];
-    } else {
-      slots[i] = shuffledComps[i];
-    }
-  }
+  // Generate slots with strict same-academy separation
+  const slots = buildAcademySeparatedSlots(competitors, m);
 
   const rounds = [];
   let roundSize = m / 2;
