@@ -86,6 +86,21 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+
+.brand-logo {
+  height: 38px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.02);
+  opacity: 0.95;
+}
+
 .brand-section {
   display: flex;
   align-items: center;
@@ -921,7 +936,22 @@ body {
     text-align: center;
   }
   
-  .brand-section {
+  
+.brand-logo {
+  height: 38px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.02);
+  opacity: 0.95;
+}
+
+.brand-section {
     justify-content: center;
     margin-bottom: 0.25rem;
   }

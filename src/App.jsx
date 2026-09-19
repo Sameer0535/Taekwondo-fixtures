@@ -1,3 +1,4 @@
+import kyorixLogo from './assets/kyorix-logo.png';
 import { useState, useEffect, useMemo } from 'react';
 import CompetitorList from './components/CompetitorList';
 import BracketView from './components/BracketView';
@@ -313,16 +314,12 @@ function App() {
   return (
     <div className="app-layout">
       <header className="app-header no-print">
-        <div className="brand-section">
-          <div className="brand-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-            </svg>
-          </div>
-          <div className="brand-title">
-            <h1>TKD Fixtures</h1>
-            <div className="brand-subtitle">Taekwondo Tournament Manager</div>
-          </div>
+        <div className="brand-section" onClick={() => setActiveTab('competitors')} style={{ cursor: 'pointer' }} title="Kyorix Tournament Manager">
+          <img 
+            src={kyorixLogo} 
+            alt="Kyorix" 
+            className="brand-logo" 
+          />
         </div>
 
         <nav className="nav-tabs">
