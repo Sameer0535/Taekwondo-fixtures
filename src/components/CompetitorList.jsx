@@ -106,6 +106,28 @@ const WEIGHT_CATEGORIES = {
       { value: 'Under 73kg', label: 'Under 73kg (67-73kg)' },
       { value: 'Over 73kg', label: 'Over 73kg' }
     ]
+  },
+  'Dasara': {
+    Male: [
+      { value: 'Under 45kg', label: 'Under 45kg' },
+      { value: 'Under 50kg', label: 'Under 50kg' },
+      { value: 'Under 56kg', label: 'Under 56kg' },
+      { value: 'Under 62kg', label: 'Under 62kg' },
+      { value: 'Under 69kg', label: 'Under 69kg' },
+      { value: 'Under 76kg', label: 'Under 76kg' },
+      { value: 'Under 82kg', label: 'Under 82kg' },
+      { value: 'Above 82kg', label: 'Above 82kg' }
+    ],
+    Female: [
+      { value: 'Under 42kg', label: 'Under 42kg' },
+      { value: 'Under 46kg', label: 'Under 46kg' },
+      { value: 'Under 50kg', label: 'Under 50kg' },
+      { value: 'Under 55kg', label: 'Under 55kg' },
+      { value: 'Under 60kg', label: 'Under 60kg' },
+      { value: 'Under 65kg', label: 'Under 65kg' },
+      { value: 'Under 70kg', label: 'Under 70kg' },
+      { value: 'Above 70kg', label: 'Above 70kg' }
+    ]
   }
 };
 
@@ -474,7 +496,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Age Class</label>
+              <label className="form-label">Division</label>
               <select className="form-control" value={ageCategory} onChange={e => handleAgeCategoryChange(e.target.value)}>
                 {tournamentMode === 'group4' ? (
                   <>
@@ -493,6 +515,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
                     <option value="Cadet">Cadet (12-14)</option>
                     <option value="Junior">Junior (15-17)</option>
                     <option value="Senior">Senior (18+)</option>
+                    <option value="Dasara">Dasara</option>
                   </>
                 )}
               </select>
@@ -501,7 +524,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
 
           {tournamentMode !== 'group4' && (
             <div className="form-group">
-              <label className="form-label">Weight Division</label>
+              <label className="form-label">Weight Category</label>
               <select className="form-control" value={weightClass} onChange={e => setWeightClass(e.target.value)}>
                 {(WEIGHT_CATEGORIES[ageCategory]?.[gender] || []).map(wc => (
                   <option key={wc.value} value={wc.value}>{wc.label}</option>
@@ -562,7 +585,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontSize: '0.75rem' }}>Age Class / Division</label>
+                <label className="form-label" style={{ fontSize: '0.75rem' }}>Division</label>
                 <select 
                   className="form-control" 
                   style={{ fontSize: '0.85rem' }} 
@@ -593,6 +616,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
                       <option value="Cadet">Cadet (12-14)</option>
                       <option value="Junior">Junior (15-17)</option>
                       <option value="Senior">Senior (18+)</option>
+                    <option value="Dasara">Dasara</option>
                     </>
                   )}
                 </select>
@@ -600,7 +624,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
 
               {tournamentMode !== 'group4' && (
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Weight Division</label>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Weight Category</label>
                   <select 
                     className="form-control" 
                     style={{ fontSize: '0.85rem' }} 

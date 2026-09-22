@@ -31,6 +31,10 @@ Designed for sanctioned state, national, and international sparring (Kyorugi) to
 - **Male**: Under 54kg (Fin), Under 58kg (Fly), Under 63kg (Bantam), Under 68kg (Feather), Under 74kg (Light), Under 80kg (Welter), Under 87kg (Middle), Over 87kg (Heavy).
 - **Female**: Under 46kg (Fin), Under 49kg (Fly), Under 53kg (Bantam), Under 57kg (Feather), Under 62kg (Light), Under 67kg (Welter), Under 73kg (Middle), Over 73kg (Heavy).
 
+##### Dasara Division
+- **Male**: Under 45kg, Under 50kg, Under 56kg, Under 62kg, Under 69kg, Under 76kg, Under 82kg, Above 82kg.
+- **Female**: Under 42kg, Under 46kg, Under 50kg, Under 55kg, Under 60kg, Under 65kg, Under 70kg, Above 70kg.
+
 ---
 
 ### 2.2 Mode B: Group-4 Grassroots Pools
@@ -58,7 +62,8 @@ Designed for grassroots festivals, club invitationals, and novice sparring tourn
 
 ### 3.1 Bracket Sizing & Normalization
 The tournament bracket size ($S$) is normalized to the next power of 2 ($2^k$):
-$$S = 2^{\lceil \log_2(N) ceil}$$
+$$S = 2^{\lceil \log_2(N) 
+ceil}$$
 For example:
 - 3 to 4 competitors $	o S = 4$
 - 5 to 8 competitors $	o S = 8$

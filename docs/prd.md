@@ -49,14 +49,14 @@ Traditional martial arts tournaments suffer from significant operational bottlen
 
 ### 5.1 Tournament Mode Management (FR1)
 - **FR1.1 Mode Selection**: Support two distinct tournament operating modes toggleable from the dashboard:
-  - **Official Mode**: Standard World Taekwondo structure spanning Sub-Junior, Cadet, Junior, and Senior age classes with regulated Olympic weight classes.
+  - **Official Mode**: Standard World Taekwondo structure spanning Sub-Junior, Cadet, Junior, Senior, and Dasara divisions with regulated Olympic weight classes.
   - **Group-4 Mode**: Grassroots developmental format capping pools at a maximum of 4 competitors per bracket (Semifinals + Final).
 - **FR1.2 Category Adaptation**:
-  - In *Group-4 Mode*, weight class selection is hidden; age divisions switch to `U-4`, `U-6`, `U-8`, `U-10`, `U-12`, `U-15`, `U-18`, and `A-18`.
+  - In *Group-4 Mode*, weight category selection is hidden; divisions switch to `U-4`, `U-6`, `U-8`, `U-10`, `U-12`, `U-15`, `U-18`, and `A-18`.
   - In *Official Mode*, standard weight divisions (e.g., Senior Men -54kg, -58kg, -63kg, -68kg, -74kg, -80kg, -87kg, +87kg) are strictly enforced.
 
 ### 5.2 Competitor Management & Bulk Import (FR2)
-- **FR2.1 Individual Athlete Entry**: Form fields for Name, Club/Academy, Country (with NOC auto-suggestions), Gender, Age Category, Weight Class, and optional Seed (1-8).
+- **FR2.1 Individual Athlete Entry**: Form fields for Name, Club/Academy, Country (with NOC auto-suggestions), Gender, Division, Weight Category, and optional Seed (1-8).
 - **FR2.2 Bulk Batch Import**:
   - Modal with dropdown selectors for Gender, Age Division, and Weight Class.
   - Textarea input accepting raw text format: `Athlete Name, Academy Name` (one per line).
