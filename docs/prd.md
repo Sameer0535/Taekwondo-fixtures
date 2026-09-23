@@ -49,7 +49,7 @@ Traditional martial arts tournaments suffer from significant operational bottlen
 
 ### 5.1 Tournament Mode Management (FR1)
 - **FR1.1 Mode Selection**: Support two distinct tournament operating modes toggleable from the dashboard:
-  - **Official Mode**: Standard World Taekwondo structure spanning Sub-Junior, Cadet, Junior, Senior, and Dasara divisions with regulated Olympic weight classes.
+  - **Official Mode**: Standard World Taekwondo structure spanning Sub-Junior, Cadet, Junior, Senior, Dasara, and Para K41/K44 divisions with regulated Olympic weight classes.
   - **Group-4 Mode**: Grassroots developmental format capping pools at a maximum of 4 competitors per bracket (Semifinals + Final).
 - **FR1.2 Category Adaptation**:
   - In *Group-4 Mode*, weight category selection is hidden; divisions switch to `U-4`, `U-6`, `U-8`, `U-10`, `U-12`, `U-15`, `U-18`, and `A-18`.

@@ -35,6 +35,10 @@ Designed for sanctioned state, national, and international sparring (Kyorugi) to
 - **Male**: Under 45kg, Under 50kg, Under 56kg, Under 62kg, Under 69kg, Under 76kg, Under 82kg, Above 82kg.
 - **Female**: Under 42kg, Under 46kg, Under 50kg, Under 55kg, Under 60kg, Under 65kg, Under 70kg, Above 70kg.
 
+##### Para K41/K44 Division
+- **Male**: K41/K44 -58 kg, K41/K44 -63 kg, K41/K44 -70 kg, K41/K44 -80 kg, K41/K44 +80 kg.
+- **Female**: K41/K44 -47 kg, K41/K44 -52 kg, K41/K44 -57 kg, K41/K44 -65 kg, K41/K44 +65 kg.
+
 ---
 
 ### 2.2 Mode B: Group-4 Grassroots Pools

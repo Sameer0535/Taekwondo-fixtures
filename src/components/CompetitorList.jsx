@@ -128,6 +128,22 @@ const WEIGHT_CATEGORIES = {
       { value: 'Under 70kg', label: 'Under 70kg' },
       { value: 'Above 70kg', label: 'Above 70kg' }
     ]
+  },
+  'Para K41/K44': {
+    Male: [
+      { value: 'K41/K44 -58 kg', label: 'K41/K44 -58 kg' },
+      { value: 'K41/K44 -63 kg', label: 'K41/K44 -63 kg' },
+      { value: 'K41/K44 -70 kg', label: 'K41/K44 -70 kg' },
+      { value: 'K41/K44 -80 kg', label: 'K41/K44 -80 kg' },
+      { value: 'K41/K44 +80 kg', label: 'K41/K44 +80 kg' }
+    ],
+    Female: [
+      { value: 'K41/K44 -47 kg', label: 'K41/K44 -47 kg' },
+      { value: 'K41/K44 -52 kg', label: 'K41/K44 -52 kg' },
+      { value: 'K41/K44 -57 kg', label: 'K41/K44 -57 kg' },
+      { value: 'K41/K44 -65 kg', label: 'K41/K44 -65 kg' },
+      { value: 'K41/K44 +65 kg', label: 'K41/K44 +65 kg' }
+    ]
   }
 };
 
@@ -516,6 +532,7 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
                     <option value="Junior">Junior (15-17)</option>
                     <option value="Senior">Senior (18+)</option>
                     <option value="Dasara">Dasara</option>
+                    <option value="Para K41/K44">Para K41/K44</option>
                   </>
                 )}
               </select>
@@ -616,7 +633,8 @@ function CompetitorList({ competitors, setCompetitors, onLoadSamples, onClearAll
                       <option value="Cadet">Cadet (12-14)</option>
                       <option value="Junior">Junior (15-17)</option>
                       <option value="Senior">Senior (18+)</option>
-                    <option value="Dasara">Dasara</option>
+                      <option value="Dasara">Dasara</option>
+                      <option value="Para K41/K44">Para K41/K44</option>
                     </>
                   )}
                 </select>
