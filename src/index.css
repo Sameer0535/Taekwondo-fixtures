@@ -903,7 +903,48 @@ body {
 
 @media print {
   .print-only-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 1rem !important;
+    border-bottom: 2px solid var(--primary) !important;
+    padding-bottom: 0.5rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-page-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 0.4rem !important;
+    border-bottom: 2px solid var(--primary) !important;
+    padding-bottom: 0.2rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-header-category {
+    flex: 1 !important;
+  }
+
+  .print-header-brand {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+  }
+
+  .print-company-logo {
     display: block !important;
+    height: 38px !important;
+    width: auto !important;
+    max-width: 180px !important;
+    object-fit: contain !important;
+  }
+
+  .print-company-logo-compact {
+    height: 28px !important;
+    max-width: 140px !important;
   }
 }
 

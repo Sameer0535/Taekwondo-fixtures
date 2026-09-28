@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import MatchModal from './MatchModal';
+import kyorixLogo from '../assets/kyorix-logo.png';
 import { updateMatchScore, assignActiveMatchNumbers, rebuildBracketState } from '../utils/bracketBuilder';
 import { nocToIso } from '../utils/countries';
 
@@ -568,10 +569,19 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
 
       {/* Print-only header for small brackets */}
       {!isLargeBracket && (
-        <div className="print-only-header" style={{ marginBottom: '1rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.5rem' }}>
-          <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--primary)' }}>
-            {divisionName}{courtNo ? ` - Court ${courtNo}` : ''}
-          </h2>
+        <div className="print-only-header">
+          <div className="print-header-category">
+            <h2 style={{ margin: 0, fontSize: '1.35rem', color: 'var(--primary)', fontWeight: 'bold' }}>
+              {divisionName}{courtNo ? ` - Court ${courtNo}` : ''}
+            </h2>
+          </div>
+          <div className="print-header-brand">
+            <img 
+              src={kyorixLogo} 
+              alt="Kyorix Sport Technology" 
+              className="print-company-logo" 
+            />
+          </div>
         </div>
       )}
 
@@ -868,10 +878,15 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
         const scaleVal = Math.min(1.0, PRINT_SAFE_W / page.width, PRINT_SAFE_H / page.height);
         return (
           <div key={pIdx} className="print-only-page print-page" style={{ position: 'relative', minHeight: '100%', height: '100%', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '0.4rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.2rem' }}>
+            <div className="print-page-header">
               <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--primary)', fontWeight: 'bold' }}>
                 {divisionName}{courtNo ? ` - Court ${courtNo}` : ''} — {page.name}
               </h3>
+              <img 
+                src={kyorixLogo} 
+                alt="Kyorix Sport Technology" 
+                className="print-company-logo print-company-logo-compact" 
+              />
             </div>
             
             <div 
