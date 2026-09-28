@@ -571,7 +571,7 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
       {!isLargeBracket && (
         <div className="print-only-header">
           <div className="print-header-category">
-            <h2 style={{ margin: 0, fontSize: '1.35rem', color: 'var(--primary)', fontWeight: 'bold' }}>
+            <h2 style={{ margin: 0, fontSize: '1.45rem', color: 'var(--primary)', fontWeight: 'bold' }}>
               {divisionName}{courtNo ? ` - Court ${courtNo}` : ''}
             </h2>
           </div>
@@ -608,7 +608,7 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
             height: `${columnHeight}px`,
             position: 'relative',
             padding: 0,
-            '--print-zoom': String(Math.min(1.0, 1040 / containerWidth, 680 / columnHeight))
+            '--print-zoom': String(Math.min(1.0, 960 / containerWidth, 630 / columnHeight))
           }}
         >
           {/* SVG Bracket lines layer — same coordinate space as cards */}
@@ -873,13 +873,13 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
       {/* Print-only split pages layout for large brackets */}
       {isLargeBracket && printPages.map((page, pIdx) => {
         // Safe printable area in landscape A4 paper
-        const PRINT_SAFE_W = 980;
-        const PRINT_SAFE_H = 590;
+        const PRINT_SAFE_W = 940;
+        const PRINT_SAFE_H = 550;
         const scaleVal = Math.min(1.0, PRINT_SAFE_W / page.width, PRINT_SAFE_H / page.height);
         return (
           <div key={pIdx} className="print-only-page print-page" style={{ position: 'relative', minHeight: '100%', height: '100%', boxSizing: 'border-box' }}>
             <div className="print-page-header">
-              <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--primary)', fontWeight: 'bold' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary)', fontWeight: 'bold' }}>
                 {divisionName}{courtNo ? ` - Court ${courtNo}` : ''} — {page.name}
               </h3>
               <img 
