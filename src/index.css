@@ -849,6 +849,10 @@ body {
     box-sizing: border-box !important;
   }
 
+  .hide-in-print-large {
+    display: none !important;
+  }
+
   .bracket-container {
     transform: none !important;
     transform-origin: top left !important;
@@ -892,6 +896,36 @@ body {
     box-sizing: border-box !important;
   }
 
+  .print-only-page {
+    display: block !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    width: 100% !important;
+    min-height: 96vh !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    margin: 0 !important;
+    padding: 0 4mm !important;
+    background-color: white !important;
+    overflow: hidden !important;
+  }
+
+  .print-only-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .print-page-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin: 0 0 0.75rem 0 !important;
+    padding: 0 0 0.5rem 0 !important;
+    border-bottom: 2.5px solid var(--primary) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
   .print-header-category {
     flex: 1 !important;
   }
@@ -909,9 +943,16 @@ body {
     max-width: 250px !important;
     object-fit: contain !important;
   }
+
+  svg path {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
-.print-only-header {
+.print-only-header,
+.print-only-page,
+.print-page-header {
   display: none;
 }
 
@@ -944,22 +985,21 @@ body {
     text-align: center;
   }
   
-  
-.brand-logo {
-  height: 42px;
-  width: auto;
-  max-width: 230px;
-  object-fit: contain;
-  display: block;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
+  .brand-logo {
+    height: 42px;
+    width: auto;
+    max-width: 230px;
+    object-fit: contain;
+    display: block;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
 
-.brand-logo:hover {
-  transform: scale(1.02);
-  opacity: 0.95;
-}
+  .brand-logo:hover {
+    transform: scale(1.02);
+    opacity: 0.95;
+  }
 
-.brand-section {
+  .brand-section {
     justify-content: center;
     margin-bottom: 0.25rem;
   }
