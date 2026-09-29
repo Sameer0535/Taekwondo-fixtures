@@ -138,6 +138,27 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
     setPosition({ x: 0, y: 0 });
   };
 
+  const handlePrint = () => {
+    setPosition({ x: 0, y: 0 });
+    setTimeout(() => {
+      window.print();
+    }, 50);
+  };
+
+  // Compute dynamic print zoom so the complete tie sheet tree fits horizontally without any right cutoff
+  const printZoom = useMemo(() => {
+    if (!containerWidth || !columnHeight) return '1';
+    const widthZoom = 1040 / containerWidth;
+    const heightZoom = 660 / columnHeight;
+    let zoomVal = Math.min(1.0, widthZoom);
+    if (heightZoom >= 0.45) {
+      zoomVal = Math.min(zoomVal, heightZoom);
+    } else {
+      zoomVal = Math.max(0.40, zoomVal);
+    }
+    return String(Math.round(zoomVal * 1000) / 1000);
+  }, [containerWidth, columnHeight]);
+
   // Drag Handlers
   const handleMouseDown = (e) => {
     if (e.target.closest('.btn') || e.target.closest('.match-card') || e.target.closest('select')) return;
@@ -386,113 +407,7 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
   const semiRound = rounds[rounds.length - 2];
   const numSemiMatches = semiRound ? semiRound.filter(m => m.status !== 'walkover').length : 0;
 
-  const isLargeBracket = rounds[0] && rounds[0].length > 8;
 
-  // ── Compact print-specific layout constants ──
-  // Constants tuned for zero bottom cutoff, clean right margin space, and crisp readability
-  const P_CARD_H = 60;      // 14px info + 23px blue + 23px red
-  const P_GAP = 6;
-  const P_SLOT = P_CARD_H + P_GAP;  // 66px
-  const P_COL_W = 205;      // Column width leaving a clean margin on the right side
-  const P_COL_GAP = 22;
-  const P_COL_STEP = P_COL_W + P_COL_GAP; // 227px
-  const P_MARGIN = 10;
-  const P_HEADER = 20;
-  const P_INFO_BAR_H = 14;
-  const P_ROW_H = 23;
-  const P_CARD_MID = P_CARD_H / 2; // 30
-  const P_BLUE_MID = P_INFO_BAR_H + P_ROW_H / 2; // 14 + 11.5 = 25.5
-  const P_RED_MID = P_INFO_BAR_H + P_ROW_H + P_ROW_H / 2; // 14 + 23 + 11.5 = 48.5
-
-  const printPages = useMemo(() => {
-    if (!isLargeBracket) return [];
-    if (!rounds || rounds.length === 0) return [];
-
-    const totalRounds = rounds.length;
-    if (totalRounds < 3) return [];
-
-    // Helper: lay out a sub-bracket from scratch with compact coordinates
-    const layoutPool = (matchesByRound) => {
-      const laid = matchesByRound.map(round => round.map(m => ({ ...m })));
-      // Position round 0 leaves sequentially for visible matches (equal spacing, no blank gaps)
-      let visibleCount = 0;
-      for (let i = 0; i < laid[0].length; i++) {
-        if (laid[0][i].status === 'walkover') {
-          laid[0][i].py = P_MARGIN + P_HEADER;
-        } else {
-          laid[0][i].py = P_MARGIN + P_HEADER + visibleCount * P_SLOT;
-          visibleCount++;
-        }
-      }
-      // Center parent rounds matching active vs walkover feeder logic
-      for (let r = 1; r < laid.length; r++) {
-        for (let m = 0; m < laid[r].length; m++) {
-          const topChild = laid[r - 1][m * 2];
-          const botChild = laid[r - 1][m * 2 + 1];
-
-          const topActive = topChild && topChild.status !== 'walkover';
-          const botActive = botChild && botChild.status !== 'walkover';
-
-          if (topActive && botActive) {
-            laid[r][m].py = (topChild.py + botChild.py) / 2;
-          } else if (topActive) {
-            laid[r][m].py = topChild.py;
-          } else if (botActive) {
-            laid[r][m].py = botChild.py;
-          } else {
-            laid[r][m].py = P_MARGIN + P_HEADER + m * P_SLOT * Math.pow(2, r);
-          }
-        }
-      }
-      // Generate lines
-      const lines = [];
-      for (let r = 0; r < laid.length - 1; r++) {
-        for (const match of laid[r]) {
-          if (r === 0 && match.status === 'walkover') continue;
-          const isTop = match.matchIndex % 2 === 0;
-          const nextIdx = Math.floor(match.matchIndex / 2);
-          const next = laid[r + 1][nextIdx];
-          if (!next) continue;
-          const x1 = P_MARGIN + r * P_COL_STEP + P_COL_W;
-          const x2 = P_MARGIN + (r + 1) * P_COL_STEP;
-          const y1 = match.py + P_CARD_MID;
-          const y2 = next.py + (isTop ? P_BLUE_MID : P_RED_MID);
-          lines.push({ d: getStepPath(x1, y1, x2, y2) });
-        }
-      }
-      const leafCount = Math.max(1, visibleCount);
-      const height = P_MARGIN + P_HEADER + leafCount * P_SLOT + P_MARGIN;
-      const width = P_MARGIN * 2 + laid.length * P_COL_STEP;
-      return { rounds: laid, lines, height, width };
-    };
-
-    // Slice rounds into Pool A (top half → QF) and Pool B (bottom half → QF)
-    const poolARoundData = [];
-    const poolBRoundData = [];
-    for (let r = 0; r < totalRounds - 2; r++) {
-      const rnd = processedRounds[r];
-      const half = rnd.length / 2;
-      // Re-index matchIndex for Pool A starting from 0, preserving originalMatchIndex
-      poolARoundData.push(rnd.slice(0, half).map((m, i) => ({ ...m, originalMatchIndex: m.matchIndex, matchIndex: i })));
-      // Re-index matchIndex for Pool B starting from 0, preserving originalMatchIndex
-      poolBRoundData.push(rnd.slice(half).map((m, i) => ({ ...m, originalMatchIndex: m.matchIndex, matchIndex: i })));
-    }
-
-    const poolA = layoutPool(poolARoundData);
-    const poolB = layoutPool(poolBRoundData);
-
-    // Finals: Semifinals + Final with compact layout, preserving originalMatchIndex
-    const semiMatches = processedRounds[totalRounds - 2].map((m, i) => ({ ...m, originalMatchIndex: m.matchIndex, matchIndex: i }));
-    const finalMatch = { ...processedRounds[totalRounds - 1][0], originalMatchIndex: processedRounds[totalRounds - 1][0].matchIndex, matchIndex: 0 };
-    const finalsData = [[...semiMatches], [finalMatch]];
-    const finals = layoutPool(finalsData);
-
-    return [
-      { name: "Pool A", ...poolA, totalRoundsCount: totalRounds },
-      { name: "Pool B", ...poolB, totalRoundsCount: totalRounds },
-      { name: "Finals & Semifinals", ...finals, isFinals: true, totalRoundsCount: totalRounds }
-    ];
-  }, [processedRounds, isLargeBracket, rounds]);
 
 
 
@@ -563,13 +478,12 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
           <button className="btn btn-secondary btn-sm" onClick={() => handleZoom(1.15)}>Zoom +</button>
           <button className="btn btn-secondary btn-sm" onClick={() => handleZoom(0.85)}>Zoom -</button>
           <button className="btn btn-secondary btn-sm" onClick={handleResetZoom}>Reset View</button>
-          <button className="btn btn-primary btn-sm" onClick={() => window.print()}>Print / Save PDF</button>
+          <button className="btn btn-primary btn-sm" onClick={handlePrint}>Print / Save PDF</button>
         </div>
       </div>
 
-      {/* Print-only header for small brackets */}
-      {!isLargeBracket && (
-        <div className="print-only-header">
+      {/* Print-only header: division name on left, company logo on right */}
+      <div className="print-only-header">
           <div className="print-header-category">
             <h2 style={{ margin: 0, fontSize: '1.45rem', color: 'var(--primary)', fontWeight: 'bold' }}>
               {divisionName}{courtNo ? ` - Court ${courtNo}` : ''}
@@ -583,11 +497,10 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
             />
           </div>
         </div>
-      )}
 
       {/* Main Bracket Canvas */}
       <div 
-        className={`bracket-wrapper ${isLargeBracket ? 'large-bracket-screen' : ''}`}
+        className="bracket-wrapper"
         ref={containerRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -608,7 +521,7 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
             height: `${columnHeight}px`,
             position: 'relative',
             padding: 0,
-            '--print-zoom': String(Math.min(1.0, 960 / containerWidth, 630 / columnHeight))
+            '--print-zoom': printZoom
           }}
         >
           {/* SVG Bracket lines layer — same coordinate space as cards */}
@@ -823,222 +736,7 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
             </table>
           </div>
         )}
-
-        {/* Duplicate copy for print layout - rendered outside zoomed bracket-container so it can escape container bounds and use position: fixed relative to paper boundary */}
-        {!isLargeBracket && podium && (
-          <div className="standings-box standings-print" style={{ 
-            width: '260px', 
-            border: '1px solid var(--border-color)', 
-            borderRadius: '6px', 
-            backgroundColor: 'white',
-            overflow: 'hidden',
-            boxShadow: 'var(--shadow-sm)'
-          }}>
-            <table className="custom-table" style={{ fontSize: '0.8rem' }}>
-              <tbody>
-                <tr>
-                  <td style={{ width: '45px', fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>1st</td>
-                  <td style={{ padding: '0.4rem 0.75rem', fontWeight: podium.first ? 'bold' : 'normal' }}>
-                    {podium.first?.name || ''}
-                  </td>
-                </tr>
-                <tr>
-                  <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>2nd</td>
-                  <td style={{ padding: '0.4rem 0.75rem' }}>
-                    {podium.second?.name || ''}
-                  </td>
-                </tr>
-                {numSemiMatches >= 1 && (
-                  <tr>
-                    <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                    <td style={{ padding: '0.4rem 0.75rem' }}>
-                      {podium.bronze1?.name || ''}
-                    </td>
-                  </tr>
-                )}
-                {numSemiMatches >= 2 && (
-                  <tr>
-                    <td style={{ fontWeight: 'bold', borderRight: '1px solid var(--border-color)', textAlign: 'center', backgroundColor: '#f8fafc' }}>3rd</td>
-                    <td style={{ padding: '0.4rem 0.75rem' }}>
-                      {podium.bronze2?.name || ''}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
-
-      {/* Print-only split pages layout for large brackets */}
-      {isLargeBracket && printPages.map((page, pIdx) => {
-        // Safe printable area in landscape A4 paper
-        const PRINT_SAFE_W = 940;
-        const PRINT_SAFE_H = 550;
-        const scaleVal = Math.min(1.0, PRINT_SAFE_W / page.width, PRINT_SAFE_H / page.height);
-        return (
-          <div key={pIdx} className="print-only-page print-page" style={{ position: 'relative', minHeight: '100%', height: '100%', boxSizing: 'border-box' }}>
-            <div className="print-page-header">
-              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary)', fontWeight: 'bold' }}>
-                {divisionName}{courtNo ? ` - Court ${courtNo}` : ''} — {page.name}
-              </h3>
-              <img 
-                src={kyorixLogo} 
-                alt="Kyorix Sport Technology" 
-                className="print-company-logo print-company-logo-compact" 
-              />
-            </div>
-            
-            <div 
-              style={{ 
-                position: 'relative', 
-                width: `${page.width}px`, 
-                height: `${page.height}px`,
-                transform: `scale(${scaleVal})`,
-                transformOrigin: 'top left'
-              }}
-            >
-              <svg 
-                style={{
-                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none'
-                }}
-              >
-                {page.lines.map((line, idx) => (
-                  <path key={idx} d={line.d} stroke="#94a3b8" strokeWidth="1.75" fill="none" />
-                ))}
-              </svg>
-
-              {page.rounds.map((round, rIndex) => (
-                <div 
-                  key={rIndex}
-                  style={{
-                    position: 'absolute', top: 0,
-                    left: `${P_MARGIN + rIndex * P_COL_STEP}px`,
-                    width: `${P_COL_W}px`, height: '100%'
-                  }}
-                >
-                  <div style={{ position: 'absolute', top: `${P_MARGIN}px`, left: 0, width: '100%', fontWeight: 'bold', fontSize: '0.66rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    {page.isFinals
-                      ? (rIndex === 0 ? "Semifinals" : "Final") 
-                      : getRoundHeader(rIndex, page.totalRoundsCount)}
-                  </div>
-
-                  {round.map((match) => {
-                    if (rIndex === 0 && match.status === 'walkover') return null;
-                    const flagCodeP1 = getFlagCode(match.p1);
-                    const flagCodeP2 = getFlagCode(match.p2);
-                    return (
-                      <div 
-                        key={match.id}
-                        style={{ 
-                          position: 'absolute', top: `${match.py}px`, left: 0,
-                          width: `${P_COL_W}px`, height: `${P_CARD_H}px`
-                        }}
-                      >
-                        <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
-                          {/* Info bar: Match # • Round */}
-                          <div style={{ height: `${P_INFO_BAR_H}px`, padding: '0 8px', fontSize: '0.55rem', backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#334155', fontWeight: 'bold' }}>
-                            <span>Match {match.matchNo} • {getRoundHeader(match.roundIndex, processedRounds.length)}</span>
-                            {match.status === 'completed' && <span style={{ fontSize: '0.45rem', textTransform: 'uppercase' }}>{match.winType}</span>}
-                          </div>
-
-                          {/* Blue corner */}
-                          <div style={{ height: `${P_ROW_H}px`, padding: '1px 8px', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', position: 'relative', backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white' }}>
-                            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#2563eb' }}></div>
-                            <div style={{ flex: 1, overflow: 'hidden', paddingRight: '6px' }}>
-                              <div style={{ fontSize: '0.68rem', fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '600', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
-                                {match.p1 ? match.p1.name : getFeedingPlaceholder(true, match)}
-                              </div>
-                              {match.p1?.club && (
-                                <div style={{ fontSize: '0.52rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1', marginTop: '1px' }}>
-                                  {match.p1.club}
-                                </div>
-                              )}
-                            </div>
-
-                            {match.p1 && flagCodeP1 && (
-                              <div style={{ marginLeft: '6px', flexShrink: 0 }}>
-                                <img 
-                                  src={`https://flagcdn.com/w40/${flagCodeP1}.png`} 
-                                  alt={flagCodeP1.toUpperCase()} 
-                                  style={{ width: '17px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
-                                />
-                              </div>
-                            )}
-
-                            {match.status === 'completed' && match.score1 !== null && (
-                              <span style={{ fontWeight: 'bold', marginLeft: '6px', fontSize: '0.68rem', color: '#2563eb' }}>{match.score1}</span>
-                            )}
-                          </div>
-
-                          {/* Red corner */}
-                          <div style={{ height: `${P_ROW_H}px`, padding: '1px 8px', display: 'flex', alignItems: 'center', position: 'relative', backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white' }}>
-                            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#dc2626' }}></div>
-                            <div style={{ flex: 1, overflow: 'hidden', paddingRight: '6px' }}>
-                              <div style={{ fontSize: '0.68rem', fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '600', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
-                                {match.p2 ? match.p2.name : getFeedingPlaceholder(false, match)}
-                              </div>
-                              {match.p2?.club && (
-                                <div style={{ fontSize: '0.52rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1', marginTop: '1px' }}>
-                                  {match.p2.club}
-                                </div>
-                              )}
-                            </div>
-
-                            {match.p2 && flagCodeP2 && (
-                              <div style={{ marginLeft: '6px', flexShrink: 0 }}>
-                                <img 
-                                  src={`https://flagcdn.com/w40/${flagCodeP2}.png`} 
-                                  alt={flagCodeP2.toUpperCase()} 
-                                  style={{ width: '17px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
-                                />
-                              </div>
-                            )}
-
-                            {match.status === 'completed' && match.score2 !== null && (
-                              <span style={{ fontWeight: 'bold', marginLeft: '6px', fontSize: '0.68rem', color: '#dc2626' }}>{match.score2}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-
-            {/* Podium block — placed at bottom-right corner of the printed page */}
-            {page.isFinals && podium && (
-              <div style={{ position: 'absolute', bottom: '15px', right: '20px', width: '250px', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: 'white', overflow: 'hidden', zIndex: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
-                  <tbody>
-                    <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      <td style={{ width: '40px', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '5px 8px', borderRight: '1px solid #e2e8f0' }}>1st</td>
-                      <td style={{ padding: '5px 10px', fontWeight: podium.first ? 'bold' : 'normal' }}>{podium.first?.name || ''}</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '5px 8px', borderRight: '1px solid #e2e8f0' }}>2nd</td>
-                      <td style={{ padding: '5px 10px' }}>{podium.second?.name || ''}</td>
-                    </tr>
-                    {numSemiMatches >= 1 && (
-                      <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                        <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '5px 8px', borderRight: '1px solid #e2e8f0' }}>3rd</td>
-                        <td style={{ padding: '5px 10px' }}>{podium.bronze1?.name || ''}</td>
-                      </tr>
-                    )}
-                    {numSemiMatches >= 2 && (
-                      <tr>
-                        <td style={{ fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f8fafc', padding: '5px 8px', borderRight: '1px solid #e2e8f0' }}>3rd</td>
-                        <td style={{ padding: '5px 10px' }}>{podium.bronze2?.name || ''}</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        );
-      })}
 
       {/* Main Bracket Scoring Modal */}
       {selectedMatch && (

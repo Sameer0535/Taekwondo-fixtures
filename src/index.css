@@ -799,15 +799,11 @@ body {
 
 
 
-.standings-print {
-  display: none;
-}
-
-/* Printing styles */
+/* Printing styles - Full tie sheet exact to website view mode */
 @media print {
   @page {
     size: landscape;
-    margin: 12mm 18mm;
+    margin: 8mm 12mm;
   }
 
   * {
@@ -828,8 +824,9 @@ body {
 
   .container {
     padding: 0 !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     max-width: 100% !important;
+    width: 100% !important;
     box-sizing: border-box !important;
   }
 
@@ -838,6 +835,7 @@ body {
     box-shadow: none !important;
     background-color: transparent !important;
     padding: 0 !important;
+    margin: 0 !important;
   }
 
   .bracket-wrapper {
@@ -846,14 +844,19 @@ body {
     background-color: white !important;
     width: 100% !important;
     height: auto !important;
-    padding: 0 10px !important;
+    padding: 0 !important;
+    margin: 0 !important;
     box-sizing: border-box !important;
   }
 
   .bracket-container {
-    zoom: var(--print-zoom, 0.7) !important;
-    padding: 0 !important;
+    transform: none !important;
+    transform-origin: top left !important;
+    zoom: var(--print-zoom, 1) !important;
     margin: 0 auto !important;
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
   }
 
   .match-card {
@@ -874,72 +877,17 @@ body {
     border-bottom: 1px solid var(--border-color) !important;
   }
 
-  .standings-print {
-    display: block !important;
-    position: fixed !important;
-    bottom: 25px !important;
-    right: 35px !important;
-    z-index: 100 !important;
-  }
-
-  .large-bracket-screen {
-    display: none !important;
-  }
-
-  .print-only-page {
-    display: block !important;
-    position: relative !important;
-    width: 100% !important;
-    height: 100vh !important;
-    min-height: 100vh !important;
-    box-sizing: border-box !important;
-    margin: 0 !important;
-    padding: 16px 22px !important;
-    background-color: white !important;
-    overflow: hidden !important;
-  }
-
-  .print-only-page:not(:last-of-type) {
-    page-break-after: always;
-    break-after: page;
-  }
-
-  .print-round-header {
-    font-weight: bold;
-    font-size: 0.85rem;
-    color: #475569 !important;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-  }
-
   .draggable-comp::after {
     display: none !important;
   }
-}
 
-.print-only-page, .print-only-header {
-  display: none;
-}
-
-@media print {
   .print-only-header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    margin: 6px 10px 1.5rem 10px !important;
-    padding: 0 4px 0.65rem 4px !important;
+    margin: 0 0 1rem 0 !important;
+    padding: 0 0 0.5rem 0 !important;
     border-bottom: 2.5px solid var(--primary) !important;
-    width: calc(100% - 20px) !important;
-    box-sizing: border-box !important;
-  }
-
-  .print-page-header {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    margin: 6px 0 0.75rem 0 !important;
-    border-bottom: 2.5px solid var(--primary) !important;
-    padding: 0 4px 0.45rem 4px !important;
     width: 100% !important;
     box-sizing: border-box !important;
   }
@@ -961,13 +909,10 @@ body {
     max-width: 250px !important;
     object-fit: contain !important;
   }
+}
 
-  .print-company-logo-compact {
-    height: 42px !important;
-    width: auto !important;
-    max-width: 200px !important;
-    object-fit: contain !important;
-  }
+.print-only-header {
+  display: none;
 }
 
 /* Disable CSS-based connection lines in favor of perfect dynamic SVG overlay lines */
