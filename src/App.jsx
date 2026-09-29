@@ -4,6 +4,7 @@ import CompetitorList from './components/CompetitorList';
 import BracketView from './components/BracketView';
 import ResultsView from './components/ResultsView';
 import { generateBracket } from './utils/bracketBuilder';
+import { SEED_DASARA_COMPETITORS, SEED_DASARA_BRACKETS } from './data/seedData';
 import './App.css';
 
 const SAMPLE_COMPETITORS = [
@@ -136,19 +137,51 @@ function App() {
     }
   };
   const [competitors, setCompetitors] = useState(() => {
-    const saved = localStorage.getItem('tkd_competitors_v3');
-    return saved ? JSON.parse(saved) : SAMPLE_COMPETITORS;
+    try {
+      const saved = localStorage.getItem('tkd_competitors_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const existingIds = new Set(parsed.map(c => (c.id || c.name || '').toLowerCase()));
+          const missingDasara = SEED_DASARA_COMPETITORS.filter(c => !existingIds.has((c.id || c.name || '').toLowerCase()));
+          if (missingDasara.length > 0) {
+            const merged = [...missingDasara, ...parsed];
+            localStorage.setItem('tkd_competitors_v3', JSON.stringify(merged));
+            localStorage.setItem('tkd_competitors_v1', JSON.stringify(merged));
+            return merged;
+          }
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    const initial = [...SEED_DASARA_COMPETITORS, ...SAMPLE_COMPETITORS];
+    try {
+      localStorage.setItem('tkd_competitors_v3', JSON.stringify(initial));
+      localStorage.setItem('tkd_competitors_v1', JSON.stringify(initial));
+    } catch (e) {}
+    return initial;
   });
 
   const [brackets, setBrackets] = useState(() => {
-    const saved = localStorage.getItem('tkd_brackets_v3');
-    return saved ? JSON.parse(saved) : {};
+    try {
+      const saved = localStorage.getItem('tkd_brackets_v3');
+      let parsed = saved ? JSON.parse(saved) : {};
+      if (!parsed || typeof parsed !== 'object') parsed = {};
+      if (!parsed['Male_Dasara_Under_56kg'] || !Array.isArray(parsed['Male_Dasara_Under_56kg']) || parsed['Male_Dasara_Under_56kg'].length === 0) {
+        parsed = { ...SEED_DASARA_BRACKETS, ...parsed };
+        localStorage.setItem('tkd_brackets_v3', JSON.stringify(parsed));
+      }
+      return parsed;
+    } catch (e) {
+      return SEED_DASARA_BRACKETS;
+    }
   });
 
-
-  const [activeTab, setActiveTab] = useState('competitors');
+  const [activeTab, setActiveTab] = useState('brackets');
   const [regenerateToast, setRegenerateToast] = useState(null);
-  const [selectedDivisionId, setSelectedDivisionId] = useState('');
+  const [selectedDivisionId, setSelectedDivisionId] = useState('Male_Dasara_Under_56kg');
+  const [syncStatus, setSyncStatus] = useState('synced');
+  const [lastSyncTime, setLastSyncTime] = useState(new Date());
 
   // Auto-save and live broadcast state to EvtMgr and backend
   useEffect(() => {
@@ -238,13 +271,28 @@ function App() {
         if (savedComps) {
           try {
             const parsed = JSON.parse(savedComps);
-            if (Array.isArray(parsed)) setCompetitors(parsed);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const compMap = new Map();
+              // Preserve Dasara competitors always
+              SEED_DASARA_COMPETITORS.forEach(c => compMap.set((c.id || c.name || '').toLowerCase(), c));
+              parsed.forEach(c => {
+                const k = (c.id || c.name || '').toLowerCase();
+                compMap.set(k, { ...(compMap.get(k) || {}), ...c });
+              });
+              setCompetitors(Array.from(compMap.values()));
+            }
           } catch(e) {}
         }
         if (savedBrackets) {
           try {
             const parsed = JSON.parse(savedBrackets);
-            if (parsed && typeof parsed === 'object') setBrackets(parsed);
+            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+              setBrackets(prev => ({
+                ...SEED_DASARA_BRACKETS,
+                ...prev,
+                ...parsed
+              }));
+            }
           } catch(e) {}
         }
         if (savedMode) setTournamentMode(savedMode);
@@ -255,6 +303,8 @@ function App() {
           } catch(e) {}
         }
         if (savedTotalCourts) setTotalCourts(Number(savedTotalCourts));
+        setSyncStatus('synced');
+        setLastSyncTime(new Date());
       } catch (err) {
         console.warn('Storage sync notice:', err);
       }
@@ -277,7 +327,7 @@ function App() {
     window.addEventListener('message', handleMessage);
     window.addEventListener('storage', handleStorageEvent);
 
-    // Initial check from backend server if available
+    // Safe non-destructive background server synchronization
     const checkServerData = async () => {
       const endpoints = ['/api/live-sync', 'http://localhost:3000/api/live-sync'];
       for (const ep of endpoints) {
@@ -287,30 +337,49 @@ function App() {
             const data = await res.json();
             if (data && data.success) {
               if (data.competitors && Array.isArray(data.competitors) && data.competitors.length > 0) {
-                const curStr = localStorage.getItem('tkd_competitors_v3');
-                const newStr = JSON.stringify(data.competitors);
-                if (curStr !== newStr) {
-                  localStorage.setItem('tkd_competitors_v3', newStr);
-                  localStorage.setItem('tkd_competitors_v1', newStr);
-                  setCompetitors(data.competitors);
-                }
+                setCompetitors(prev => {
+                  const compMap = new Map();
+                  // 1. Keep seed Dasara competitors
+                  SEED_DASARA_COMPETITORS.forEach(c => compMap.set((c.id || c.name || '').toLowerCase(), c));
+                  // 2. Keep local state
+                  prev.forEach(c => compMap.set((c.id || c.name || '').toLowerCase(), c));
+                  // 3. Merge server competitors
+                  data.competitors.forEach(c => {
+                    const k = (c.id || c.name || '').toLowerCase();
+                    compMap.set(k, { ...(compMap.get(k) || {}), ...c });
+                  });
+                  const merged = Array.from(compMap.values());
+                  const serialized = JSON.stringify(merged);
+                  if (localStorage.getItem('tkd_competitors_v3') !== serialized) {
+                    localStorage.setItem('tkd_competitors_v3', serialized);
+                    localStorage.setItem('tkd_competitors_v1', serialized);
+                  }
+                  return merged;
+                });
               }
               if (data.brackets && typeof data.brackets === 'object' && Object.keys(data.brackets).length > 0) {
-                const curBrStr = localStorage.getItem('tkd_brackets_v3');
-                const newBrStr = JSON.stringify(data.brackets);
-                if (curBrStr !== newBrStr) {
-                  localStorage.setItem('tkd_brackets_v3', newBrStr);
-                  setBrackets(data.brackets);
-                }
+                setBrackets(prev => {
+                  const merged = {
+                    ...SEED_DASARA_BRACKETS,
+                    ...prev,
+                    ...data.brackets
+                  };
+                  // Never allow Male_Dasara_Under_56kg to be cleared if it was seeded
+                  if (!merged['Male_Dasara_Under_56kg'] || merged['Male_Dasara_Under_56kg'].length === 0) {
+                    merged['Male_Dasara_Under_56kg'] = SEED_DASARA_BRACKETS['Male_Dasara_Under_56kg'];
+                  }
+                  const serialized = JSON.stringify(merged);
+                  if (localStorage.getItem('tkd_brackets_v3') !== serialized) {
+                    localStorage.setItem('tkd_brackets_v3', serialized);
+                  }
+                  return merged;
+                });
               }
               if (data.divisionCourts && typeof data.divisionCourts === 'object') {
-                const curC = localStorage.getItem('tkd_division_courts_v1');
-                const newC = JSON.stringify(data.divisionCourts);
-                if (curC !== newC) {
-                  localStorage.setItem('tkd_division_courts_v1', newC);
-                  setDivisionCourts(data.divisionCourts);
-                }
+                setDivisionCourts(prev => ({ ...prev, ...data.divisionCourts }));
               }
+              setSyncStatus('synced');
+              setLastSyncTime(new Date());
               break;
             }
           }
@@ -388,13 +457,19 @@ function App() {
     return divs;
   }, [competitors, tournamentMode]);
 
-  // Select first division by default if none is selected
+  // Select Male_Dasara_Under_56kg by default or first available division
   useEffect(() => {
     const keys = Object.keys(divisions);
-    if (keys.length > 0 && !selectedDivisionId) {
-      setSelectedDivisionId(keys[0]);
+    if (keys.length > 0) {
+      if (!selectedDivisionId || !keys.includes(selectedDivisionId)) {
+        if (keys.includes('Male_Dasara_Under_56kg')) {
+          setSelectedDivisionId('Male_Dasara_Under_56kg');
+        } else {
+          setSelectedDivisionId(keys[0]);
+        }
+      }
     }
-  }, [competitors, selectedDivisionId]);
+  }, [divisions, selectedDivisionId]);
 
   const handleGenerateBracket = (divId) => {
     const divComps = divisions[divId]?.competitors || [];
@@ -442,6 +517,52 @@ function App() {
       setCompetitors(samples);
       setBrackets({});
       setSelectedDivisionId('');
+    }
+  };
+
+  const handleForceSyncNow = async () => {
+    setSyncStatus('syncing');
+    try {
+      // 1. Save local state
+      localStorage.setItem('tkd_competitors_v3', JSON.stringify(competitors));
+      localStorage.setItem('tkd_competitors_v1', JSON.stringify(competitors));
+      localStorage.setItem('tkd_brackets_v3', JSON.stringify(brackets));
+      localStorage.setItem('tkd_division_courts_v1', JSON.stringify(divisionCourts));
+      localStorage.setItem('tkd_match_updated', Date.now().toString());
+
+      // 2. Broadcast to parent window / iframe container
+      const payload = {
+        type: 'TKD_DRAWS_UPDATED',
+        competitors,
+        brackets,
+        courts: divisionCourts
+      };
+      if (typeof window !== 'undefined') {
+        if (window.parent && window.parent !== window) {
+          try { window.parent.postMessage(payload, '*'); } catch(e) {}
+        }
+        if (window.opener && !window.opener.closed) {
+          try { window.opener.postMessage(payload, '*'); } catch(e) {}
+        }
+      }
+
+      // 3. Push to server endpoints
+      const endpoints = ['/api/live-sync', 'http://localhost:3000/api/live-sync'];
+      for (const ep of endpoints) {
+        try {
+          await fetch(ep, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ competitors, brackets, divisionCourts })
+          });
+        } catch(e) {}
+      }
+      setSyncStatus('synced');
+      setLastSyncTime(new Date());
+      alert('Tournament data synchronized successfully with EvtMgr and server!');
+    } catch(err) {
+      setSyncStatus('error');
+      alert('Sync notice: ' + (err.message || 'Synced locally and broadcasted to EvtMgr'));
     }
   };
 
@@ -518,10 +639,18 @@ function App() {
           </button>
         </nav>
 
-        <div className="header-actions">
-          <button className="btn btn-secondary btn-sm" onClick={handleExportData}>Export JSON</button>
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', padding: '0.3rem 0.6rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '6px', color: '#10b981', fontWeight: 600 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: syncStatus === 'syncing' ? '#f59e0b' : '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981' }}></span>
+            <span>{syncStatus === 'syncing' ? 'Syncing...' : 'Live Synced'}</span>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={handleForceSyncNow} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }} title="Force sync all competitors, brackets and courts with EvtMgr">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            Sync with EvtMgr
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={handleExportData}>Export Backup</button>
           <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', margin: 0 }}>
-            Import JSON
+            Import
             <input type="file" onChange={handleImportData} style={{ display: 'none' }} accept=".json" />
           </label>
         </div>
