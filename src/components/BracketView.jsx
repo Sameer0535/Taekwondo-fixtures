@@ -909,8 +909,10 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
       {/* Print-only Multi-Page Layout for Large Brackets (Pool A, Pool B, Finals & Semifinals) */}
       {isLargeBracket && printPages.map((page, pIdx) => {
         const PRINT_SAFE_W = 1000;
-        const PRINT_SAFE_H = 600;
+        const PRINT_SAFE_H = 580;
         const scaleVal = Math.min(1.0, PRINT_SAFE_W / page.width, PRINT_SAFE_H / page.height);
+        const scaledW = Math.ceil(page.width * scaleVal);
+        const scaledH = Math.ceil(page.height * scaleVal);
 
         return (
           <div key={pIdx} className="print-only-page">
@@ -930,355 +932,319 @@ function BracketView({ divisionId, divisionName, courtNo, rounds, setBrackets, o
               </div>
             </div>
 
-            {/* Subtree Canvas */}
+            {/* Layout-Constrained Subtree Container to prevent any page break slicing */}
             <div 
               style={{
+                width: `${scaledW}px`,
+                height: `${scaledH}px`,
                 position: 'relative',
-                width: `${page.width}px`,
-                height: `${page.height}px`,
-                transform: `scale(${scaleVal})`,
-                transformOrigin: 'top left',
+                overflow: 'hidden',
                 margin: '0 auto'
               }}
             >
-              {/* High-Contrast SVG Connection Lines */}
-              <svg 
+              {/* Subtree Canvas */}
+              <div 
                 style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
                   width: `${page.width}px`,
                   height: `${page.height}px`,
-                  pointerEvents: 'none',
-                  zIndex: 0
+                  transform: `scale(${scaleVal})`,
+                  transformOrigin: 'top left'
                 }}
               >
-                {page.lines.map((line, lIdx) => (
-                  <path 
-                    key={lIdx}
-                    d={line.d}
-                    stroke="#334155"
-                    strokeWidth="2.2"
-                    vectorEffect="non-scaling-stroke"
-                    fill="none"
-                  />
-                ))}
-              </svg>
+                {/* High-Contrast SVG Connection Lines */}
+                <svg 
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: `${page.width}px`,
+                    height: `${page.height}px`,
+                    pointerEvents: 'none',
+                    zIndex: 0
+                  }}
+                >
+                  {page.lines.map((line, lIdx) => (
+                    <path 
+                      key={lIdx}
+                      d={line.d}
+                      stroke="#334155"
+                      strokeWidth="2.2"
+                      vectorEffect="non-scaling-stroke"
+                      fill="none"
+                    />
+                  ))}
+                </svg>
 
-              {/* Round Columns */}
-              {page.rounds.map((round, rIndex) => {
-                const isPoolFinalRound = !page.isFinals && rIndex === page.rounds.length - 1;
-                const colX = page.isFinals 
-                  ? (rIndex === 0 ? 40 : 360) 
-                  : (P_MARGIN + rIndex * P_COL_STEP);
+                {/* Round Columns */}
+                {page.rounds.map((round, rIndex) => {
+                  const isPoolFinalRound = !page.isFinals && rIndex === page.rounds.length - 1;
+                  const colX = page.isFinals 
+                    ? (rIndex === 0 ? 40 : 360) 
+                    : (P_MARGIN + rIndex * P_COL_STEP);
 
-                return (
-                  <div 
-                    key={rIndex}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: `${colX}px`,
-                      width: `${P_COL_W}px`,
-                      height: `${page.height}px`,
-                      zIndex: 1
-                    }}
-                  >
-                    <div style={{
-                      position: 'absolute',
-                      top: `${page.isFinals ? 40 : P_MARGIN}px`,
-                      left: 0,
-                      width: '100%',
-                      fontWeight: 'bold',
-                      fontSize: '0.72rem',
-                      color: '#334155',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>
-                      {page.isFinals 
-                        ? (rIndex === 0 ? "Semifinals" : "Championship Final") 
-                        : getRoundHeader(round[0].roundIndex, page.totalRoundsCount)}
-                    </div>
+                  return (
+                    <div 
+                      key={rIndex}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: `${colX}px`,
+                        width: `${P_COL_W}px`,
+                        height: `${page.height}px`,
+                        zIndex: 1
+                      }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: `${page.isFinals ? 40 : P_MARGIN}px`,
+                        left: 0,
+                        width: '100%',
+                        fontWeight: 'bold',
+                        fontSize: '0.72rem',
+                        color: '#334155',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        {page.isFinals 
+                          ? (rIndex === 0 ? "Semifinals" : "Championship Final") 
+                          : getRoundHeader(round[0].roundIndex, page.totalRoundsCount)}
+                      </div>
 
-                    {round.map((match) => {
-                      if (rIndex === 0 && !page.isFinals && match.status === 'walkover') return null;
+                      {round.map((match) => {
+                        if (rIndex === 0 && !page.isFinals && match.status === 'walkover') return null;
 
-                      const flagCodeP1 = getFlagCode(match.p1);
-                      const flagCodeP2 = getFlagCode(match.p2);
+                        const flagCodeP1 = getFlagCode(match.p1);
+                        const flagCodeP2 = getFlagCode(match.p2);
 
-                      return (
-                        <div 
-                          key={match.id}
-                          style={{
-                            position: 'absolute',
-                            top: `${match.py}px`,
-                            left: 0,
-                            width: `${P_COL_W}px`,
-                            height: `${P_CARD_H}px`
-                          }}
-                        >
-                          <div style={{
-                            border: '1px solid #cbd5e1',
-                            borderRadius: '5px',
-                            overflow: 'hidden',
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            backgroundColor: 'white',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                          }}>
-                            {/* Match Header Bar */}
-                            <div style={{
-                              height: `${P_INFO_BAR_H}px`,
-                              padding: '0 8px',
-                              fontSize: '0.62rem',
-                              backgroundColor: '#f8fafc',
-                              borderBottom: '1px solid #cbd5e1',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              color: '#334155',
-                              fontWeight: '700'
-                            }}>
-                              <span>
-                                {match.matchNo ? `Match ${match.matchNo}` : 'Match'} • {page.isFinals ? (rIndex === 0 ? "Semifinal" : "Final") : getRoundHeader(match.roundIndex, page.totalRoundsCount)}
-                              </span>
-                              {match.status === 'completed' && match.winType && (
-                                <span style={{
-                                  fontSize: '0.52rem',
-                                  textTransform: 'uppercase',
-                                  backgroundColor: '#dbeafe',
-                                  color: '#1d4ed8',
-                                  padding: '1px 5px',
-                                  borderRadius: '3px',
-                                  fontWeight: 'bold'
-                                }}>
-                                  {match.winType}
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Blue Corner Row */}
-                            <div style={{
-                              height: `${P_ROW_H}px`,
-                              padding: '0 8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              borderBottom: '1px solid #e2e8f0',
-                              position: 'relative',
-                              backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white'
-                            }}>
-                              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#2563eb' }}></div>
-                              <div style={{ flex: 1, overflow: 'hidden', paddingLeft: '6px', paddingRight: '4px' }}>
-                                <div style={{
-                                  fontSize: '0.74rem',
-                                  fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '600',
-                                  color: '#0f172a',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  lineHeight: '1.2',
-                                  textDecoration: match.winnerId && match.p1?.id !== match.winnerId ? 'line-through' : 'none',
-                                  opacity: match.winnerId && match.p1?.id !== match.winnerId ? 0.6 : 1
-                                }}>
-                                  {match.p1 ? match.p1.name : getPrintPlaceholder(true, match, page)}
-                                </div>
-                                {match.p1?.club && (
-                                  <div style={{ fontSize: '0.56rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
-                                    {match.p1.club}
-                                  </div>
-                                )}
-                              </div>
-
-                              {match.p1 && flagCodeP1 && (
-                                <div style={{ marginLeft: '4px', flexShrink: 0 }}>
-                                  <img 
-                                    src={`https://flagcdn.com/w40/${flagCodeP1}.png`} 
-                                    alt={flagCodeP1.toUpperCase()} 
-                                    style={{ width: '17px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
-                                  />
-                                </div>
-                              )}
-
-                              {match.status === 'completed' && match.score1 !== null && (
-                                <span style={{ fontWeight: '800', marginLeft: '6px', fontSize: '0.76rem', color: '#2563eb', fontFamily: 'monospace' }}>
-                                  {match.score1}
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Red Corner Row */}
-                            <div style={{
-                              height: `${P_ROW_H}px`,
-                              padding: '0 8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              position: 'relative',
-                              backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white'
-                            }}>
-                              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#dc2626' }}></div>
-                              <div style={{ flex: 1, overflow: 'hidden', paddingLeft: '6px', paddingRight: '4px' }}>
-                                <div style={{
-                                  fontSize: '0.74rem',
-                                  fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '600',
-                                  color: '#0f172a',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  lineHeight: '1.2',
-                                  textDecoration: match.winnerId && match.p2?.id !== match.winnerId ? 'line-through' : 'none',
-                                  opacity: match.winnerId && match.p2?.id !== match.winnerId ? 0.6 : 1
-                                }}>
-                                  {match.p2 ? match.p2.name : getPrintPlaceholder(false, match, page)}
-                                </div>
-                                {match.p2?.club && (
-                                  <div style={{ fontSize: '0.56rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
-                                    {match.p2.club}
-                                  </div>
-                                )}
-                              </div>
-
-                              {match.p2 && flagCodeP2 && (
-                                <div style={{ marginLeft: '4px', flexShrink: 0 }}>
-                                  <img 
-                                    src={`https://flagcdn.com/w40/${flagCodeP2}.png`} 
-                                    alt={flagCodeP2.toUpperCase()} 
-                                    style={{ width: '17px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
-                                  />
-                                </div>
-                              )}
-
-                              {match.status === 'completed' && match.score2 !== null && (
-                                <span style={{ fontWeight: '800', marginLeft: '6px', fontSize: '0.76rem', color: '#dc2626', fontFamily: 'monospace' }}>
-                                  {match.score2}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Quarterfinal Exit Arrow Tags for Pool A & Pool B */}
-                          {isPoolFinalRound && (
-                            <div style={{
+                        return (
+                          <div 
+                            key={match.id}
+                            style={{
                               position: 'absolute',
-                              left: `${P_COL_W + 8}px`,
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              backgroundColor: '#0f172a',
-                              color: 'white',
-                              fontSize: '0.62rem',
-                              fontWeight: '700',
-                              padding: '4px 8px',
-                              borderRadius: '4px',
-                              whiteSpace: 'nowrap',
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                              top: `${match.py}px`,
+                              left: 0,
+                              width: `${P_COL_W}px`,
+                              height: `${P_CARD_H}px`
+                            }}
+                          >
+                            <div style={{
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '5px',
+                              overflow: 'hidden',
+                              height: '100%',
                               display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              zIndex: 5
+                              flexDirection: 'column',
+                              backgroundColor: 'white',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                             }}>
-                              <span>➔</span>
-                              <span>
-                                {page.isPoolA 
-                                  ? (match.localMatchIndex === 0 ? 'To SF 1 (Blue)' : 'To SF 1 (Red)')
-                                  : (match.localMatchIndex === 0 ? 'To SF 2 (Blue)' : 'To SF 2 (Red)')
-                                }
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+                              {/* Match Header Bar */}
+                              <div style={{
+                                height: `${P_INFO_BAR_H}px`,
+                                padding: '0 8px',
+                                fontSize: '0.62rem',
+                                backgroundColor: '#f8fafc',
+                                borderBottom: '1px solid #cbd5e1',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                color: '#334155',
+                                fontWeight: '700'
+                              }}>
+                                <span>
+                                  {match.matchNo ? `Match ${match.matchNo}` : 'Match'} • {page.isFinals ? (rIndex === 0 ? "Semifinal" : "Final") : getRoundHeader(match.roundIndex, page.totalRoundsCount)}
+                                </span>
+                                {match.status === 'completed' && match.winType && (
+                                  <span style={{
+                                    fontSize: '0.52rem',
+                                    textTransform: 'uppercase',
+                                    backgroundColor: '#dbeafe',
+                                    color: '#1d4ed8',
+                                    padding: '1px 5px',
+                                    borderRadius: '3px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {match.winType}
+                                  </span>
+                                )}
+                              </div>
 
-              {/* Podium Box on Page 3 (Finals & Semifinals) */}
-              {page.isFinals && podium && (
-                <div style={{
-                  position: 'absolute',
-                  top: '80px',
-                  left: '680px',
-                  width: '320px',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '8px',
-                  backgroundColor: 'white',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.06)',
-                  zIndex: 10
-                }}>
+                              {/* Blue Corner Row */}
+                              <div style={{
+                                height: `${P_ROW_H}px`,
+                                padding: '0 8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                borderBottom: '1px solid #e2e8f0',
+                                position: 'relative',
+                                backgroundColor: match.winnerId && match.p1?.id === match.winnerId ? '#eff6ff' : 'white'
+                              }}>
+                                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#2563eb' }}></div>
+                                <div style={{ flex: 1, overflow: 'hidden', paddingLeft: '6px', paddingRight: '4px' }}>
+                                  <div style={{
+                                    fontSize: '0.74rem',
+                                    fontWeight: match.winnerId && match.p1?.id === match.winnerId ? '700' : '600',
+                                    color: '#0f172a',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    lineHeight: '1.2',
+                                    textDecoration: match.winnerId && match.p1?.id !== match.winnerId ? 'line-through' : 'none',
+                                    opacity: match.winnerId && match.p1?.id !== match.winnerId ? 0.6 : 1
+                                  }}>
+                                    {match.p1 ? match.p1.name : getPrintPlaceholder(true, match, page)}
+                                  </div>
+                                  {match.p1?.club && (
+                                    <div style={{ fontSize: '0.56rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
+                                      {match.p1.club}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {match.p1 && flagCodeP1 && (
+                                  <div style={{ marginLeft: '4px', flexShrink: 0 }}>
+                                    <img 
+                                      src={`https://flagcdn.com/w40/${flagCodeP1}.png`} 
+                                      alt={flagCodeP1.toUpperCase()} 
+                                      style={{ width: '17px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
+                                    />
+                                  </div>
+                                )}
+
+                                {match.status === 'completed' && match.score1 !== null && (
+                                  <span style={{ fontWeight: '800', marginLeft: '6px', fontSize: '0.76rem', color: '#2563eb', fontFamily: 'monospace' }}>
+                                    {match.score1}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Red Corner Row */}
+                              <div style={{
+                                height: `${P_ROW_H}px`,
+                                padding: '0 8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                position: 'relative',
+                                backgroundColor: match.winnerId && match.p2?.id === match.winnerId ? '#fef2f2' : 'white'
+                              }}>
+                                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#dc2626' }}></div>
+                                <div style={{ flex: 1, overflow: 'hidden', paddingLeft: '6px', paddingRight: '4px' }}>
+                                  <div style={{
+                                    fontSize: '0.74rem',
+                                    fontWeight: match.winnerId && match.p2?.id === match.winnerId ? '700' : '600',
+                                    color: '#0f172a',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    lineHeight: '1.2',
+                                    textDecoration: match.winnerId && match.p2?.id !== match.winnerId ? 'line-through' : 'none',
+                                    opacity: match.winnerId && match.p2?.id !== match.winnerId ? 0.6 : 1
+                                  }}>
+                                    {match.p2 ? match.p2.name : getPrintPlaceholder(false, match, page)}
+                                  </div>
+                                  {match.p2?.club && (
+                                    <div style={{ fontSize: '0.56rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.1' }}>
+                                      {match.p2.club}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {match.p2 && flagCodeP2 && (
+                                  <div style={{ marginLeft: '4px', flexShrink: 0 }}>
+                                    <img 
+                                      src={`https://flagcdn.com/w40/${flagCodeP2}.png`} 
+                                      alt={flagCodeP2.toUpperCase()} 
+                                      style={{ width: '17px', height: '11px', display: 'block', borderRadius: '1px', objectFit: 'cover' }}
+                                    />
+                                  </div>
+                                )}
+
+                                {match.status === 'completed' && match.score2 !== null && (
+                                  <span style={{ fontWeight: '800', marginLeft: '6px', fontSize: '0.76rem', color: '#dc2626', fontFamily: 'monospace' }}>
+                                    {match.score2}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Quarterfinal Exit Arrow Tags for Pool A & Pool B */}
+                            {isPoolFinalRound && (
+                              <div style={{
+                                position: 'absolute',
+                                left: `${P_COL_W + 8}px`,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: '#0f172a',
+                                color: 'white',
+                                fontSize: '0.62rem',
+                                fontWeight: '700',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                whiteSpace: 'nowrap',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                zIndex: 5
+                              }}>
+                                <span>➔</span>
+                                <span>
+                                  {page.isPoolA 
+                                    ? (match.localMatchIndex === 0 ? 'To SF 1 (Blue)' : 'To SF 1 (Red)')
+                                    : (match.localMatchIndex === 0 ? 'To SF 2 (Blue)' : 'To SF 2 (Red)')
+                                  }
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+
+                {/* Podium Box on Page 3 (Finals & Semifinals) - Clean and Minimalist matching website */}
+                {page.isFinals && podium && (
                   <div style={{
-                    padding: '8px 12px',
-                    backgroundColor: '#0f172a',
-                    color: 'white',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
+                    position: 'absolute',
+                    top: '60px',
+                    left: '680px',
+                    width: '260px',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    backgroundColor: 'white',
+                    overflow: 'hidden',
+                    zIndex: 10
                   }}>
-                    <span>Official Results</span>
-                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Medal Standings</span>
+                    <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+                      <tbody>
+                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                          <td style={{ width: '45px', fontWeight: 'bold', borderRight: '1px solid #cbd5e1', textAlign: 'center', backgroundColor: '#f8fafc', padding: '0.4rem 0.75rem' }}>1st</td>
+                          <td style={{ padding: '0.4rem 0.75rem', fontWeight: podium.first ? 'bold' : 'normal' }}>{podium.first?.name || ''}</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                          <td style={{ width: '45px', fontWeight: 'bold', borderRight: '1px solid #cbd5e1', textAlign: 'center', backgroundColor: '#f8fafc', padding: '0.4rem 0.75rem' }}>2nd</td>
+                          <td style={{ padding: '0.4rem 0.75rem' }}>{podium.second?.name || ''}</td>
+                        </tr>
+                        {numSemiMatches >= 1 && (
+                          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ width: '45px', fontWeight: 'bold', borderRight: '1px solid #cbd5e1', textAlign: 'center', backgroundColor: '#f8fafc', padding: '0.4rem 0.75rem' }}>3rd</td>
+                            <td style={{ padding: '0.4rem 0.75rem' }}>{podium.bronze1?.name || ''}</td>
+                          </tr>
+                        )}
+                        {numSemiMatches >= 2 && (
+                          <tr>
+                            <td style={{ width: '45px', fontWeight: 'bold', borderRight: '1px solid #cbd5e1', textAlign: 'center', backgroundColor: '#f8fafc', padding: '0.4rem 0.75rem' }}>3rd</td>
+                            <td style={{ padding: '0.4rem 0.75rem' }}>{podium.bronze2?.name || ''}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
-                  <table style={{ width: '100%', fontSize: '0.78rem', borderCollapse: 'collapse' }}>
-                    <tbody>
-                      {/* 1st Place - Gold */}
-                      <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#fffbeb' }}>
-                        <td style={{ width: '54px', fontWeight: 'bold', textAlign: 'center', padding: '8px 6px', color: '#b45309', borderRight: '1px solid #fde68a' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                            <span>🥇</span>
-                            <span>1st</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: '8px 10px' }}>
-                          <div style={{ fontWeight: 'bold', color: '#0f172a' }}>{podium.first?.name || 'Pending Final'}</div>
-                          {podium.first?.club && <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{podium.first.club}</div>}
-                        </td>
-                      </tr>
-                      {/* 2nd Place - Silver */}
-                      <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-                        <td style={{ width: '54px', fontWeight: 'bold', textAlign: 'center', padding: '8px 6px', color: '#475569', borderRight: '1px solid #e2e8f0' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                            <span>🥈</span>
-                            <span>2nd</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: '8px 10px' }}>
-                          <div style={{ fontWeight: podium.second ? 'bold' : 'normal', color: '#0f172a' }}>{podium.second?.name || 'Pending Final'}</div>
-                          {podium.second?.club && <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{podium.second.club}</div>}
-                        </td>
-                      </tr>
-                      {/* 3rd Place - Bronze 1 */}
-                      <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                        <td style={{ width: '54px', fontWeight: 'bold', textAlign: 'center', padding: '8px 6px', color: '#9a3412', borderRight: '1px solid #e2e8f0' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                            <span>🥉</span>
-                            <span>3rd</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: '8px 10px' }}>
-                          <div style={{ fontWeight: podium.bronze1 ? '600' : 'normal', color: '#0f172a' }}>{podium.bronze1?.name || 'Pending Semifinal 1'}</div>
-                          {podium.bronze1?.club && <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{podium.bronze1.club}</div>}
-                        </td>
-                      </tr>
-                      {/* 3rd Place - Bronze 2 */}
-                      <tr>
-                        <td style={{ width: '54px', fontWeight: 'bold', textAlign: 'center', padding: '8px 6px', color: '#9a3412', borderRight: '1px solid #e2e8f0' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                            <span>🥉</span>
-                            <span>3rd</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: '8px 10px' }}>
-                          <div style={{ fontWeight: podium.bronze2 ? '600' : 'normal', color: '#0f172a' }}>{podium.bronze2?.name || 'Pending Semifinal 2'}</div>
-                          {podium.bronze2?.club && <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{podium.bronze2.club}</div>}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         );

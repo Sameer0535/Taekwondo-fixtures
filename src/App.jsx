@@ -150,14 +150,183 @@ function App() {
   const [regenerateToast, setRegenerateToast] = useState(null);
   const [selectedDivisionId, setSelectedDivisionId] = useState('');
 
-  // Auto-save state
+  // Auto-save and live broadcast state to EvtMgr and backend
   useEffect(() => {
-    localStorage.setItem('tkd_competitors_v3', JSON.stringify(competitors));
+    try {
+      const serialized = JSON.stringify(competitors);
+      if (localStorage.getItem('tkd_competitors_v3') !== serialized) {
+        localStorage.setItem('tkd_competitors_v3', serialized);
+        localStorage.setItem('tkd_competitors_v1', serialized);
+      }
+    } catch(e) {}
+
+    // Broadcast to parent window (EvtMgr iframe container) and opener
+    const payload = {
+      type: 'TKD_DRAWS_UPDATED',
+      competitors,
+      brackets,
+      courts: divisionCourts
+    };
+    if (typeof window !== 'undefined') {
+      if (window.parent && window.parent !== window) {
+        try { window.parent.postMessage(payload, '*'); } catch(e) {}
+      }
+      if (window.opener && !window.opener.closed) {
+        try { window.opener.postMessage(payload, '*'); } catch(e) {}
+      }
+    }
+
+    // Push to backend live-sync if available
+    const endpoints = ['/api/live-sync', 'http://localhost:3000/api/live-sync'];
+    endpoints.forEach(ep => {
+      try {
+        fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ competitors, brackets, divisionCourts })
+        }).catch(() => {});
+      } catch(e) {}
+    });
   }, [competitors]);
 
   useEffect(() => {
-    localStorage.setItem('tkd_brackets_v3', JSON.stringify(brackets));
+    try {
+      const serialized = JSON.stringify(brackets);
+      if (localStorage.getItem('tkd_brackets_v3') !== serialized) {
+        localStorage.setItem('tkd_brackets_v3', serialized);
+        localStorage.setItem('tkd_match_updated', Date.now().toString());
+      }
+    } catch(e) {}
+
+    const payload = {
+      type: 'TKD_DRAWS_UPDATED',
+      competitors,
+      brackets,
+      courts: divisionCourts
+    };
+    if (typeof window !== 'undefined') {
+      if (window.parent && window.parent !== window) {
+        try { window.parent.postMessage(payload, '*'); } catch(e) {}
+      }
+      if (window.opener && !window.opener.closed) {
+        try { window.opener.postMessage(payload, '*'); } catch(e) {}
+      }
+    }
+
+    const endpoints = ['/api/live-sync', 'http://localhost:3000/api/live-sync'];
+    endpoints.forEach(ep => {
+      try {
+        fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ competitors, brackets, divisionCourts })
+        }).catch(() => {});
+      } catch(e) {}
+    });
   }, [brackets]);
+
+  // Live incoming synchronization from EvtMgr (postMessage, storage event, and server polling)
+  useEffect(() => {
+    const reloadFromStorage = () => {
+      try {
+        const savedComps = localStorage.getItem('tkd_competitors_v3');
+        const savedBrackets = localStorage.getItem('tkd_brackets_v3');
+        const savedMode = localStorage.getItem('tkd_tournament_mode_v1');
+        const savedCourts = localStorage.getItem('tkd_division_courts_v1');
+        const savedTotalCourts = localStorage.getItem('tkd_total_courts_v1');
+
+        if (savedComps) {
+          try {
+            const parsed = JSON.parse(savedComps);
+            if (Array.isArray(parsed)) setCompetitors(parsed);
+          } catch(e) {}
+        }
+        if (savedBrackets) {
+          try {
+            const parsed = JSON.parse(savedBrackets);
+            if (parsed && typeof parsed === 'object') setBrackets(parsed);
+          } catch(e) {}
+        }
+        if (savedMode) setTournamentMode(savedMode);
+        if (savedCourts) {
+          try {
+            const parsed = JSON.parse(savedCourts);
+            if (parsed && typeof parsed === 'object') setDivisionCourts(parsed);
+          } catch(e) {}
+        }
+        if (savedTotalCourts) setTotalCourts(Number(savedTotalCourts));
+      } catch (err) {
+        console.warn('Storage sync notice:', err);
+      }
+    };
+
+    const handleMessage = (e) => {
+      if (!e || !e.data) return;
+      if (e.data.type === 'TKD_RELOAD_BRACKETS' || e.data.type === 'TKD_SYNC_ROSTER' || e.data.type === 'TKD_DRAWS_RELOAD') {
+        reloadFromStorage();
+      }
+    };
+
+    const handleStorageEvent = (e) => {
+      if (!e) return;
+      if (e.key === 'tkd_competitors_v3' || e.key === 'tkd_brackets_v3' || e.key === 'tkd_tournament_mode_v1' || e.key === 'tkd_division_courts_v1' || e.key === 'tkd_match_updated') {
+        reloadFromStorage();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    window.addEventListener('storage', handleStorageEvent);
+
+    // Initial check from backend server if available
+    const checkServerData = async () => {
+      const endpoints = ['/api/live-sync', 'http://localhost:3000/api/live-sync'];
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(ep + '?t=' + Date.now());
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success) {
+              if (data.competitors && Array.isArray(data.competitors) && data.competitors.length > 0) {
+                const curStr = localStorage.getItem('tkd_competitors_v3');
+                const newStr = JSON.stringify(data.competitors);
+                if (curStr !== newStr) {
+                  localStorage.setItem('tkd_competitors_v3', newStr);
+                  localStorage.setItem('tkd_competitors_v1', newStr);
+                  setCompetitors(data.competitors);
+                }
+              }
+              if (data.brackets && typeof data.brackets === 'object' && Object.keys(data.brackets).length > 0) {
+                const curBrStr = localStorage.getItem('tkd_brackets_v3');
+                const newBrStr = JSON.stringify(data.brackets);
+                if (curBrStr !== newBrStr) {
+                  localStorage.setItem('tkd_brackets_v3', newBrStr);
+                  setBrackets(data.brackets);
+                }
+              }
+              if (data.divisionCourts && typeof data.divisionCourts === 'object') {
+                const curC = localStorage.getItem('tkd_division_courts_v1');
+                const newC = JSON.stringify(data.divisionCourts);
+                if (curC !== newC) {
+                  localStorage.setItem('tkd_division_courts_v1', newC);
+                  setDivisionCourts(data.divisionCourts);
+                }
+              }
+              break;
+            }
+          }
+        } catch(e) {}
+      }
+    };
+
+    checkServerData();
+    const interval = setInterval(checkServerData, 4000);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      window.removeEventListener('storage', handleStorageEvent);
+      clearInterval(interval);
+    };
+  }, []);
 
 
   // Compute divisions dynamically based on tournamentMode

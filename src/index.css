@@ -803,7 +803,7 @@ body {
 @media print {
   @page {
     size: landscape;
-    margin: 8mm 12mm;
+    margin: 6mm 10mm;
   }
 
   * {
@@ -900,8 +900,10 @@ body {
     display: block !important;
     page-break-after: always !important;
     break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     width: 100% !important;
-    min-height: 96vh !important;
+    max-height: 100% !important;
     box-sizing: border-box !important;
     position: relative !important;
     margin: 0 !important;
