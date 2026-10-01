@@ -639,19 +639,11 @@ function App() {
           </button>
         </nav>
 
-        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', padding: '0.3rem 0.6rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '6px', color: '#10b981', fontWeight: 600 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: syncStatus === 'syncing' ? '#f59e0b' : '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981' }}></span>
-            <span>{syncStatus === 'syncing' ? 'Syncing...' : 'Live Synced'}</span>
-          </div>
-          <button className="btn btn-primary btn-sm" onClick={handleForceSyncNow} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }} title="Force sync all competitors, brackets and courts with EvtMgr">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-            Sync with EvtMgr
-          </button>
-          <button className="btn btn-secondary btn-sm" onClick={handleExportData}>Export Backup</button>
-          <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', margin: 0 }}>
-            Import
-            <input type="file" onChange={handleImportData} style={{ display: 'none' }} accept=".json" />
+        <div className="header-actions">
+          <button className="btn btn-secondary btn-sm" onClick={handleExportData}>Export JSON</button>
+          <label className="btn btn-secondary btn-sm" style={{ cursor: "pointer", margin: 0 }}>
+            Import JSON
+            <input type="file" onChange={handleImportData} style={{ display: "none" }} accept=".json" />
           </label>
         </div>
       </header>
