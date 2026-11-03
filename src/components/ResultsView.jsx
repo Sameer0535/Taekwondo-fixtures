@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import BracketView from './BracketView';
 import { nocToIso } from '../utils/countries';
+import { EVENT_TYPES } from '../data/tournamentCategories';
 
 // Clean SVG Icons
 const TrophyIcon = () => (
@@ -32,6 +33,8 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
   const [selectedCourt, setSelectedCourt] = useState('all');
   const [selectedDivisionId, setSelectedDivisionId] = useState('');
   const [viewMode, setViewMode] = useState('bracket'); // 'bracket' | 'podium'
+  const [selectedTier, setSelectedTier] = useState('all'); // 'all' | 'Regular' | 'Freshers'
+  const [selectedEvent, setSelectedEvent] = useState('all'); // 'all' | Event Name
 
   // 1. Gather all divisions with their brackets, court assignments, and calculate completion statistics
   const allDivisionStats = useMemo(() => {
@@ -105,6 +108,8 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
       return {
         id,
         name: division.name,
+        event: division.event || 'Kyorugi',
+        categoryType: division.categoryType || 'Regular',
         competitorsCount: division.competitors?.length || 0,
         status,
         courtNo,
@@ -128,8 +133,14 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
         list = list.filter(d => String(d.courtNo) === String(selectedCourt));
       }
     }
+    if (selectedTier !== 'all') {
+      list = list.filter(d => (d.categoryType || 'Regular') === selectedTier);
+    }
+    if (selectedEvent !== 'all') {
+      list = list.filter(d => (d.event || 'Kyorugi') === selectedEvent);
+    }
     return list;
-  }, [allDivisionStats, selectedCourt]);
+  }, [allDivisionStats, selectedCourt, selectedTier, selectedEvent]);
 
   // Auto-select first division if current selection is invalid for filtered list
   useEffect(() => {
@@ -255,8 +266,59 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
               {statsSummary.completedMatches}/{statsSummary.totalMatches} Matches ({statsSummary.matchPercent}%)
             </span>
           </div>
+
+        {/* Tier & Event Filter Pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', width: '100%', paddingTop: '0.65rem', borderTop: '1px solid var(--border-color)', marginTop: '0.5rem' }}>
+          <div className="filter-pills-container">
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tier:</span>
+            <button 
+              type="button" 
+              className={`filter-pill ${selectedTier === 'all' ? 'active' : ''}`}
+              onClick={() => setSelectedTier('all')}
+            >
+              All
+            </button>
+            <button 
+              type="button" 
+              className={`filter-pill ${selectedTier === 'Regular' ? 'active-blue' : ''}`}
+              onClick={() => setSelectedTier('Regular')}
+            >
+              ⭐ Regular
+            </button>
+            <button 
+              type="button" 
+              className={`filter-pill ${selectedTier === 'Freshers' ? 'active-green' : ''}`}
+              onClick={() => setSelectedTier('Freshers')}
+            >
+              🌱 Freshers
+            </button>
+          </div>
+
+          <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border-color)' }} />
+
+          <div className="filter-pills-container">
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Event:</span>
+            <button 
+              type="button" 
+              className={`filter-pill ${selectedEvent === 'all' ? 'active' : ''}`}
+              onClick={() => setSelectedEvent('all')}
+            >
+              All Events
+            </button>
+            {EVENT_TYPES.map(ev => (
+              <button 
+                key={ev}
+                type="button" 
+                className={`filter-pill ${selectedEvent === ev ? 'active' : ''}`}
+                onClick={() => setSelectedEvent(ev)}
+              >
+                {ev}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+    </div>
 
       {/* 2. Main Results Card (Full Width) */}
       <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -286,18 +348,37 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
                     value={selectedDivisionId}
                     onChange={(e) => setSelectedDivisionId(e.target.value)}
                     className="form-control"
-                    style={{ fontWeight: '700', fontSize: '0.95rem', minWidth: '260px', width: 'auto' }}
+                    style={{ fontWeight: '700', fontSize: '0.95rem', minWidth: '280px', width: 'auto' }}
                   >
-                    {filteredDivisionStats.map(div => (
-                      <option key={div.id} value={div.id}>
-                        {div.name} ({div.competitorsCount} players) — {div.courtNo !== 'Unassigned' ? ('Court ' + div.courtNo) : 'Unassigned'}
-                      </option>
-                    ))}
+                    {filteredDivisionStats.filter(d => d.categoryType === 'Freshers').length > 0 && (
+                      <optgroup label="🌱 Freshers Divisions">
+                        {filteredDivisionStats.filter(d => d.categoryType === 'Freshers').map(div => (
+                          <option key={div.id} value={div.id}>
+                            {div.name} ({div.competitorsCount} players) — {div.courtNo !== 'Unassigned' ? ('Court ' + div.courtNo) : 'Unassigned'}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {filteredDivisionStats.filter(d => (d.categoryType || 'Regular') === 'Regular').length > 0 && (
+                      <optgroup label="⭐ Regular Divisions">
+                        {filteredDivisionStats.filter(d => (d.categoryType || 'Regular') === 'Regular').map(div => (
+                          <option key={div.id} value={div.id}>
+                            {div.name} ({div.competitorsCount} players) — {div.courtNo !== 'Unassigned' ? ('Court ' + div.courtNo) : 'Unassigned'}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </div>
 
                 {selectedDivision && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <span className={`badge ${selectedDivision.categoryType === 'Freshers' ? 'badge-green' : 'badge-blue'}`}>
+                      {selectedDivision.categoryType === 'Freshers' ? '🌱 Freshers' : '⭐ Regular'}
+                    </span>
+                    <span className="badge badge-purple">
+                      {selectedDivision.event || 'Kyorugi'}
+                    </span>
                     <span style={{
                       fontSize: '0.75rem',
                       fontWeight: '700',

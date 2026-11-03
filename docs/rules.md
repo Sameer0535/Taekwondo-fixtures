@@ -15,6 +15,10 @@ Designed for sanctioned state, national, and international sparring (Kyorugi) to
 
 #### Age & Weight Class Classifications
 
+##### Children Division
+- **Male**: Under 18kg, Under 20kg, Under 22kg, Under 24kg, Under 26kg, Under 29kg, Under 32kg, Under 35kg, Under 38kg, Over 38kg.
+- **Female**: Under 16kg, Under 18kg, Under 20kg, Under 22kg, Under 24kg, Under 26kg, Under 29kg, Under 32kg, Under 35kg, Over 35kg.
+
 ##### Sub-Junior Division
 - **Male**: Under 18kg, Under 21kg, Under 23kg, Under 25kg, Under 27kg, Under 29kg, Under 32kg, Under 35kg, Under 38kg, Under 41kg, Under 44kg, Under 50kg.
 - **Female**: Under 16kg, Under 18kg, Under 20kg, Under 22kg, Under 24kg, Under 26kg, Under 29kg, Under 32kg, Under 35kg, Under 38kg, Under 41kg, Under 47kg.
@@ -41,7 +45,34 @@ Designed for sanctioned state, national, and international sparring (Kyorugi) to
 
 ---
 
-### 2.2 Mode B: Group-4 Grassroots Pools
+---
+
+### 2.2 Official Multi-Event Tournament Architecture (Separate Regular & Freshers)
+
+The engine enforces strict separation between **Regular** and **Freshers** tiers across all 5 official competition events:
+
+| Event | Category / Tier | Sub-Category & Divisions |
+| :--- | :--- | :--- |
+| **Kyorugi** | Freshers (Individual) | Children, Sub Junior, Cadet, Junior, Over 17 (Weight classes apply) |
+| **Kyorugi** | Regular (Individual) | Sub Junior, Cadet, Junior, Over 17 (Weight classes apply) |
+| **Kyorugi** | Regular (Team) | Senior Girls & Boys (Team of 3 athletes) |
+| **Poomsae** | Freshers (Individual) | Recognised Individual - Children, Sub Junior, Cadet |
+| **Poomsae** | Regular (Individual) | Recognised Individual - Sub Junior, Cadet, Junior, U30, U40, U50, U60, U65, O65 |
+| **Poomsae** | Freshers (Mix Pair) | Recognised Mix Pair - Children, Sub Junior, Cadet |
+| **Poomsae** | Regular (Mix Pair) | Recognised Mix Pair - Children, Sub Junior, Cadet, Junior, U30, U40, U50, U60, O60 |
+| **Poomsae** | Freshers (Team) | Recognised Team Male / Female - Children, Sub Junior, Cadet |
+| **Poomsae** | Regular (Team) | Recognised Team Male / Female - Cadet, Junior, U30, U40, U50, U60, O60 |
+| **Speed Kicking** | Freshers (Individual) | Front Kick (Children, Sub Junior, Cadet, Junior, Senior) |
+| **Speed Kicking** | Regular (Individual) | Round House Kick & Turning Kick |
+| **Speed Kicking** | Regular (Team) | Male / Female Team (3 athletes) Under 17 Years, Over 17 Years |
+| **Breaking** | Freshers (E-Breaking) | Knife Hand, Close Fist Jireugi, Side Kick, Back Kick |
+| **Breaking** | Regular (E-Breaking) | Knife Hand, Close Fist Jireugi, Side Kick, Back Kick |
+| **Virtual Taekwondo** | Freshers (Individual) | Male/Female Individual - Children, Sub Junior, Cadet, Junior, Senior |
+| **Virtual Taekwondo** | Regular (Individual) | Male/Female Individual - Children, Sub Junior, Cadet, Junior, Senior |
+| **Virtual Taekwondo** | Freshers (Mix Gender) | Mix Gender Individual - Children, Sub Junior, Cadet, Junior, Senior |
+| **Virtual Taekwondo** | Regular (Mix Gender) | Mix Gender Individual - Children, Sub Junior, Cadet, Junior, Senior |
+
+### 2.3 Mode B: Group-4 Grassroots Pools
 Designed for grassroots festivals, club invitationals, and novice sparring tournaments to guarantee maximum participation, safe matching, and quick ring turnaround.
 
 #### Regulations

@@ -5,52 +5,98 @@ import BracketView from './components/BracketView';
 import ResultsView from './components/ResultsView';
 import { generateBracket } from './utils/bracketBuilder';
 import { SEED_DASARA_COMPETITORS, SEED_DASARA_BRACKETS } from './data/seedData';
+import { getCompetitorDivision, EVENT_TYPES } from './data/tournamentCategories';
 import './App.css';
 
 const SAMPLE_COMPETITORS = [
+  // === KYORUGI - REGULAR ===
   // Division: Male Senior Under 68kg (5 players - tests walkovers & bye propagation)
-  { id: 'c1', name: 'Lee Dae-hoon', club: 'Seoul TKD', country: 'KOR', seed: 1, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '3rd Dan' },
-  { id: 'c2', name: 'Alexei Denisenko', club: 'Rostov Club', country: 'RUS', seed: 2, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '2nd Dan' },
-  { id: 'c3', name: 'Joel Gonzalez', club: 'Madrid High Performance', country: 'ESP', seed: 3, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '4th Dan' },
-  { id: 'c4', name: 'Servet Tazegul', club: 'Istanbul Warriors', country: 'TUR', seed: 4, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '3rd Dan' },
-  { id: 'c5', name: 'Ahmad Abughaush', club: 'Amman Lions', country: 'JOR', seed: null, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '1st Dan' },
+  { id: 'c1', name: 'Lee Dae-hoon', club: 'Seoul TKD', country: 'KOR', seed: 1, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '3rd Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c2', name: 'Alexei Denisenko', club: 'Rostov Club', country: 'RUS', seed: 2, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '2nd Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c3', name: 'Joel Gonzalez', club: 'Madrid High Performance', country: 'ESP', seed: 3, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '4th Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c4', name: 'Servet Tazegul', club: 'Istanbul Warriors', country: 'TUR', seed: 4, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '3rd Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c5', name: 'Ahmad Abughaush', club: 'Amman Lions', country: 'JOR', seed: null, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 68kg', rank: '1st Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
 
   // Division: Female Senior Under 57kg (4 players - perfect power of 2)
-  { id: 'c6', name: 'Jade Jones', club: 'Manchester Elite', country: 'GBR', seed: 1, gender: 'Female', ageCategory: 'Senior', weightClass: 'Under 57kg', rank: '3rd Dan' },
-  { id: 'c7', name: 'Eva Calvo', club: 'Madrid High Performance', country: 'ESP', seed: 2, gender: 'Female', ageCategory: 'Senior', weightClass: 'Under 57kg', rank: '2nd Dan' },
-  { id: 'c8', name: 'Hedaya Malak', club: 'Cairo TKD Academy', country: 'EGY', seed: 3, gender: 'Female', ageCategory: 'Senior', weightClass: 'Under 57kg', rank: '1st Dan' },
-  { id: 'c9', name: 'Kimia Alizadeh', club: 'Karaj Club', country: 'IRI', seed: 4, gender: 'Female', ageCategory: 'Senior', weightClass: 'Under 57kg', rank: '2nd Dan' },
+  { id: 'c6', name: 'Jade Jones', club: 'Manchester Elite', country: 'GBR', seed: 1, gender: 'Female', ageCategory: 'Senior', weightClass: 'Under 57kg', rank: '3rd Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c7', name: 'Eva Calvo', club: 'Madrid High Performance', country: 'ESP', seed: 2, gender: 'Female', ageCategory: 'Senior', weightClass: 'Under 57kg', rank: '2nd Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c8', name: 'Hedaya Malak', club: 'Cairo TKD Academy', country: 'EGY', seed: 3, gender: 'Female', ageCategory: 'Senior', weightClass: 'Under 57kg', rank: '1st Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c9', name: 'Kimia Alizadeh', club: 'Karaj Club', country: 'IRI', seed: 4, gender: 'Female', ageCategory: 'Senior', weightClass: 'Under 57kg', rank: '2nd Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
 
   // Division: Male Junior Under 59kg (3 players - tests single bye)
-  { id: 'c10', name: 'Marc-Andre', club: 'Montreal Peak', country: 'CAN', seed: 1, gender: 'Male', ageCategory: 'Junior', weightClass: 'Under 59kg', rank: '1st Dan' },
-  { id: 'c11', name: 'Park Tae-joon', club: 'Incheon High', country: 'KOR', seed: 2, gender: 'Male', ageCategory: 'Junior', weightClass: 'Under 59kg', rank: '1st Poom' },
-  { id: 'c12', name: 'Vito Dell\'Aquila', club: 'Roma Warriors', country: 'ITA', seed: null, gender: 'Male', ageCategory: 'Junior', weightClass: 'Under 59kg', rank: '1st Poom' },
+  { id: 'c10', name: 'Marc-Andre', club: 'Montreal Peak', country: 'CAN', seed: 1, gender: 'Male', ageCategory: 'Junior', weightClass: 'Under 59kg', rank: '1st Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c11', name: 'Park Tae-joon', club: 'Incheon High', country: 'KOR', seed: 2, gender: 'Male', ageCategory: 'Junior', weightClass: 'Under 59kg', rank: '1st Poom', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c12', name: 'Vito Dell\'Aquila', club: 'Roma Warriors', country: 'ITA', seed: null, gender: 'Male', ageCategory: 'Junior', weightClass: 'Under 59kg', rank: '1st Poom', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
 
-  // Division: Male Senior Under 80kg (8 players - perfect 8-player bracket, no byes)
-  { id: 'c13', name: 'Cheick Sallah Cisse', club: 'Abidjan Elite', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '4th Dan' },
-  { id: 'c14', name: 'Lutalo Muhammad', club: 'London Academy', country: 'GBR', seed: 2, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '3rd Dan' },
-  { id: 'c15', name: 'Milad Beigi', club: 'Baku Warriors', country: 'IND', seed: 3, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '3rd Dan' },
-  { id: 'c16', name: 'Albert Gaun', club: 'Moscow Club', country: 'RUS', seed: 4, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '2nd Dan' },
-  { id: 'c17', name: 'Oussama Oueslati', club: 'Tunis Center', country: 'IND', seed: 5, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '1st Dan' },
-  { id: 'c18', name: 'Steven Lopez', club: 'Texas Legacy', country: 'USA', seed: 6, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '5th Dan' },
-  { id: 'c19', name: 'Aaron Cook', club: 'Chisinau Giants', country: 'GBR', seed: 7, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '4th Dan' },
-  { id: 'c20', name: 'Nikita Rafalovich', club: 'Tashkent Peak', country: 'UZB', seed: 8, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '3rd Dan' },
-  ...Array.from({ length: 52 }, (_, index) => {
-    const i = index + 1;
-    return {
-      id: `c_large_${i}`,
-      name: `Player ${i}`,
-      club: `Academy ${String.fromCharCode(65 + (i % 26))}`,
-      country: i % 2 === 0 ? 'KOR' : 'IND',
-      seed: i <= 8 ? i : null,
-      gender: 'Male',
-      ageCategory: 'Senior',
-      weightClass: 'Under 58kg',
-      rank: `${(i % 4) + 1}st Dan`
-    };
-  })
+  // Division: Male Senior Under 80kg (4 players)
+  { id: 'c13', name: 'Cheick Sallah Cisse', club: 'Abidjan Elite', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '4th Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c14', name: 'Lutalo Muhammad', club: 'London Academy', country: 'GBR', seed: 2, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '3rd Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c15', name: 'Milad Beigi', club: 'Baku Warriors', country: 'IND', seed: 3, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '3rd Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+  { id: 'c16', name: 'Albert Gaun', club: 'Moscow Club', country: 'RUS', seed: 4, gender: 'Male', ageCategory: 'Senior', weightClass: 'Under 80kg', rank: '2nd Dan', event: 'Kyorugi', categoryType: 'Regular', subCategory: 'Individual' },
+
+  // === KYORUGI - FRESHERS (Separate Divisions) ===
+  // Division: Male Children Under 22kg (Freshers)
+  { id: 'kf_c1', name: 'Aarav Gupta', club: 'Delhi TKD', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'Children', weightClass: 'Under 22kg', rank: 'Yellow Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'kf_c2', name: 'Reyansh Sharma', club: 'Mumbai TKD', country: 'IND', seed: 2, gender: 'Male', ageCategory: 'Children', weightClass: 'Under 22kg', rank: 'Yellow Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'kf_c3', name: 'Vivaan Jain', club: 'Bangalore Center', country: 'IND', seed: null, gender: 'Male', ageCategory: 'Children', weightClass: 'Under 22kg', rank: 'Green Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'kf_c4', name: 'Atharv Joshi', club: 'Pune TKD', country: 'IND', seed: null, gender: 'Male', ageCategory: 'Children', weightClass: 'Under 22kg', rank: 'Yellow Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+
+  // Division: Female Sub-Junior Under 24kg (Freshers)
+  { id: 'kf_sj1', name: 'Ananya Singh', club: 'Delhi TKD', country: 'IND', seed: 1, gender: 'Female', ageCategory: 'Sub-Junior', weightClass: 'Under 24kg', rank: 'Green Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'kf_sj2', name: 'Diya Verma', club: 'Jaipur TKD', country: 'IND', seed: 2, gender: 'Female', ageCategory: 'Sub-Junior', weightClass: 'Under 24kg', rank: 'Yellow Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'kf_sj3', name: 'Myra Patel', club: 'Ahmedabad Strikers', country: 'IND', seed: null, gender: 'Female', ageCategory: 'Sub-Junior', weightClass: 'Under 24kg', rank: 'Yellow Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'kf_sj4', name: 'Kavya Nair', club: 'Kerala TKD', country: 'IND', seed: null, gender: 'Female', ageCategory: 'Sub-Junior', weightClass: 'Under 24kg', rank: 'Green Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+
+  // Division: Male Cadet Under 45kg (Freshers)
+  { id: 'kf_cd1', name: 'Kabir Rao', club: 'Hyderabad Center', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'Cadet', weightClass: 'Under 45kg', rank: 'Blue Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'kf_cd2', name: 'Aditya Mehta', club: 'Mumbai TKD', country: 'IND', seed: 2, gender: 'Male', ageCategory: 'Cadet', weightClass: 'Under 45kg', rank: 'Green Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'kf_cd3', name: 'Rohan Kapoor', club: 'Chandigarh TKD', country: 'IND', seed: null, gender: 'Male', ageCategory: 'Cadet', weightClass: 'Under 45kg', rank: 'Blue Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'kf_cd4', name: 'Arjun Reddy', club: 'Bangalore Center', country: 'IND', seed: null, gender: 'Male', ageCategory: 'Cadet', weightClass: 'Under 45kg', rank: 'Red Belt', event: 'Kyorugi', categoryType: 'Freshers', subCategory: 'Individual' },
+
+  // === POOMSAE - FRESHERS & REGULAR ===
+  // Freshers: Mix Pair Children
+  { id: 'pm_f1', name: 'Aryan & Ishita', club: 'KTA', country: 'IND', seed: 1, gender: 'Mix Pair', ageCategory: 'Children', weightClass: 'Mix Pair', rank: '1st Poom', event: 'Poomsae', categoryType: 'Freshers', subCategory: 'Recognised Mix Pair' },
+  { id: 'pm_f2', name: 'Rishi & Tanvi', club: 'Prince Tkd', country: 'IND', seed: 2, gender: 'Mix Pair', ageCategory: 'Children', weightClass: 'Mix Pair', rank: '1st Poom', event: 'Poomsae', categoryType: 'Freshers', subCategory: 'Recognised Mix Pair' },
+  { id: 'pm_f3', name: 'Dhruv & Meera', club: 'Dominant', country: 'IND', seed: null, gender: 'Mix Pair', ageCategory: 'Children', weightClass: 'Mix Pair', rank: '1st Poom', event: 'Poomsae', categoryType: 'Freshers', subCategory: 'Recognised Mix Pair' },
+
+  // Regular: Female Cadet Recognised Individual
+  { id: 'pm_r1', name: 'Chen Wei', club: 'Taipei Elite', country: 'TPE', seed: 1, gender: 'Female', ageCategory: 'Cadet', weightClass: 'Individual', rank: '2nd Poom', event: 'Poomsae', categoryType: 'Regular', subCategory: 'Recognised Individual' },
+  { id: 'pm_r2', name: 'Kento Saito', club: 'Tokyo Academy', country: 'JPN', seed: 2, gender: 'Female', ageCategory: 'Cadet', weightClass: 'Individual', rank: '2nd Poom', event: 'Poomsae', categoryType: 'Regular', subCategory: 'Recognised Individual' },
+  { id: 'pm_r3', name: 'Sunita Rao', club: 'KTA', country: 'IND', seed: null, gender: 'Female', ageCategory: 'Cadet', weightClass: 'Individual', rank: '1st Poom', event: 'Poomsae', categoryType: 'Regular', subCategory: 'Recognised Individual' },
+
+  // === SPEED KICKING ===
+  // Freshers: Junior Male Front Kick
+  { id: 'sk_f1', name: 'Alex Miller', club: 'London Academy', country: 'GBR', seed: 1, gender: 'Male', ageCategory: 'Junior', weightClass: 'Front Kick', rank: '1st Dan', event: 'Speed Kicking', categoryType: 'Freshers', subCategory: 'Front Kick' },
+  { id: 'sk_f2', name: 'Ryan Clark', club: 'Manchester Elite', country: 'GBR', seed: 2, gender: 'Male', ageCategory: 'Junior', weightClass: 'Front Kick', rank: '1st Dan', event: 'Speed Kicking', categoryType: 'Freshers', subCategory: 'Front Kick' },
+  { id: 'sk_f3', name: 'Liam Davis', club: 'Dublin TKD', country: 'IRL', seed: null, gender: 'Male', ageCategory: 'Junior', weightClass: 'Front Kick', rank: '1st Dan', event: 'Speed Kicking', categoryType: 'Freshers', subCategory: 'Front Kick' },
+
+  // Regular: Female Over 17 Round House Kick
+  { id: 'sk_r1', name: 'Elena Rostova', club: 'Moscow Club', country: 'RUS', seed: 1, gender: 'Female', ageCategory: 'Over 17', weightClass: 'Round House Kick', rank: '3rd Dan', event: 'Speed Kicking', categoryType: 'Regular', subCategory: 'Round House Kick' },
+  { id: 'sk_r2', name: 'Clara Martin', club: 'Paris Elite', country: 'FRA', seed: 2, gender: 'Female', ageCategory: 'Over 17', weightClass: 'Round House Kick', rank: '2nd Dan', event: 'Speed Kicking', categoryType: 'Regular', subCategory: 'Round House Kick' },
+  { id: 'sk_r3', name: 'Maria Rossi', club: 'Roma Warriors', country: 'ITA', seed: null, gender: 'Female', ageCategory: 'Over 17', weightClass: 'Round House Kick', rank: '2nd Dan', event: 'Speed Kicking', categoryType: 'Regular', subCategory: 'Round House Kick' },
+
+  // === BREAKING (E-BREAKING) ===
+  // Freshers: Male Cadet Knife Hand
+  { id: 'brk_f1', name: 'David Kim', club: 'Seoul TKD', country: 'KOR', seed: 1, gender: 'Male', ageCategory: 'Cadet', weightClass: 'Knife Hand', rank: '1st Poom', event: 'Breaking', categoryType: 'Freshers', subCategory: 'Knife Hand' },
+  { id: 'brk_f2', name: 'Kenji Sato', club: 'Osaka Center', country: 'JPN', seed: 2, gender: 'Male', ageCategory: 'Cadet', weightClass: 'Knife Hand', rank: '1st Poom', event: 'Breaking', categoryType: 'Freshers', subCategory: 'Knife Hand' },
+  { id: 'brk_f3', name: 'Lucas Silva', club: 'Rio Club', country: 'BRA', seed: null, gender: 'Male', ageCategory: 'Cadet', weightClass: 'Knife Hand', rank: '1st Poom', event: 'Breaking', categoryType: 'Freshers', subCategory: 'Knife Hand' },
+
+  // Regular: Female Junior Side Kick
+  { id: 'brk_r1', name: 'Chloe Dupont', club: 'Lyon TKD', country: 'FRA', seed: 1, gender: 'Female', ageCategory: 'Junior', weightClass: 'Side Kick', rank: '2nd Dan', event: 'Breaking', categoryType: 'Regular', subCategory: 'Side Kick' },
+  { id: 'brk_r2', name: 'Anna Schmidt', club: 'Berlin TKD', country: 'GER', seed: 2, gender: 'Female', ageCategory: 'Junior', weightClass: 'Side Kick', rank: '2nd Dan', event: 'Breaking', categoryType: 'Regular', subCategory: 'Side Kick' },
+  { id: 'brk_r3', name: 'Sophie Brown', club: 'London Academy', country: 'GBR', seed: null, gender: 'Female', ageCategory: 'Junior', weightClass: 'Side Kick', rank: '1st Dan', event: 'Breaking', categoryType: 'Regular', subCategory: 'Side Kick' },
+
+  // === VIRTUAL TAEKWONDO ===
+  // Freshers: Male Junior Individual
+  { id: 'vt_f1', name: 'Tyler Vance', club: 'Cyber TKD', country: 'USA', seed: 1, gender: 'Male', ageCategory: 'Junior', weightClass: 'Individual', rank: '1st Dan', event: 'Virtual Taekwondo', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'vt_f2', name: 'Leo Sparks', club: 'Virtua Sports', country: 'KOR', seed: 2, gender: 'Male', ageCategory: 'Junior', weightClass: 'Individual', rank: '1st Dan', event: 'Virtual Taekwondo', categoryType: 'Freshers', subCategory: 'Individual' },
+  { id: 'vt_f3', name: 'Mason Reed', club: 'Pixel Strikers', country: 'IND', seed: null, gender: 'Male', ageCategory: 'Junior', weightClass: 'Individual', rank: '1st Dan', event: 'Virtual Taekwondo', categoryType: 'Freshers', subCategory: 'Individual' },
+
+  // Regular: Mix Gender Senior Individual
+  { id: 'vt_r1', name: 'Jordan Lee', club: 'Meta Fighters', country: 'KOR', seed: 1, gender: 'Mix Gender', ageCategory: 'Senior', weightClass: 'Mix Gender', rank: '3rd Dan', event: 'Virtual Taekwondo', categoryType: 'Regular', subCategory: 'Mix Gender' },
+  { id: 'vt_r2', name: 'Sam Rivera', club: 'Holo TKD', country: 'MEX', seed: 2, gender: 'Mix Gender', ageCategory: 'Senior', weightClass: 'Mix Gender', rank: '2nd Dan', event: 'Virtual Taekwondo', categoryType: 'Regular', subCategory: 'Mix Gender' },
+  { id: 'vt_r3', name: 'Taylor Swift', club: 'Virtual Arena', country: 'USA', seed: null, gender: 'Mix Gender', ageCategory: 'Senior', weightClass: 'Mix Gender', rank: '2nd Dan', event: 'Virtual Taekwondo', categoryType: 'Regular', subCategory: 'Mix Gender' }
 ];
-
 
 const SAMPLE_GROUP4_COMPETITORS = [
   // Male U-10 (10 players -> 3 groups of max 4 players)
@@ -73,20 +119,7 @@ const SAMPLE_GROUP4_COMPETITORS = [
   { id: 'g4_15', name: 'Isha Bhatia', club: 'Chandigarh TKD', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
   { id: 'g4_16', name: 'Kavya Sharma', club: 'Agra Strikers', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Green Belt' },
   { id: 'g4_17', name: 'Riya Sen', club: 'Ranchi Center', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
-  { id: 'g4_18', name: 'Avani Reddy', club: 'Hyderabad Center', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' },
-
-  // Male U-12 (4 players -> 1 group of 4 players)
-  { id: 'g4_19', name: 'Devansh Reddy', club: 'Hyderabad Center', country: 'IND', seed: 1, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Red Belt' },
-  { id: 'g4_20', name: 'Ishaan Nair', club: 'Kerala TKD', country: 'IND', seed: 2, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Blue Belt' },
-  { id: 'g4_21', name: 'Reyansh Rao', club: 'Bangalore Center', country: 'IND', seed: 3, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Red Belt' },
-  { id: 'g4_22', name: 'Yash Vardhan', club: 'Indore TKD', country: 'IND', seed: 4, gender: 'Male', ageCategory: 'U-12', weightClass: '', rank: 'Blue Belt' },
-
-  // Female U-15 (5 players -> 2 groups)
-  { id: 'g4_23', name: 'Pari Choudhary', club: 'Jaipur TKD', country: 'IND', seed: 1, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Red Belt' },
-  { id: 'g4_24', name: 'Nisha Agarwal', club: 'Delhi TKD', country: 'IND', seed: 2, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Black Belt' },
-  { id: 'g4_25', name: 'Simran Gill', club: 'Punjab Academy', country: 'IND', seed: 3, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Red Belt' },
-  { id: 'g4_26', name: 'Tanvi Shah', club: 'Ahmedabad Strikers', country: 'IND', seed: 4, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Blue Belt' },
-  { id: 'g4_27', name: 'Meera Iyer', club: 'Chennai Lions', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-15', weightClass: '', rank: 'Red Belt' }
+  { id: 'g4_18', name: 'Avani Reddy', club: 'Hyderabad Center', country: 'IND', seed: null, gender: 'Female', ageCategory: 'U-8', weightClass: '', rank: 'Yellow Belt' }
 ];
 
 function App() {
@@ -136,6 +169,7 @@ function App() {
       setSelectedDivisionId('');
     }
   };
+
   const [competitors, setCompetitors] = useState(() => {
     try {
       const saved = localStorage.getItem('tkd_competitors_v3');
@@ -153,12 +187,12 @@ function App() {
           return parsed;
         }
       }
-    } catch (e) {}
+    } catch (_e) {}
     const initial = [...SEED_DASARA_COMPETITORS, ...SAMPLE_COMPETITORS];
     try {
       localStorage.setItem('tkd_competitors_v3', JSON.stringify(initial));
       localStorage.setItem('tkd_competitors_v1', JSON.stringify(initial));
-    } catch (e) {}
+    } catch (_e) {}
     return initial;
   });
 
@@ -172,7 +206,7 @@ function App() {
         localStorage.setItem('tkd_brackets_v3', JSON.stringify(parsed));
       }
       return parsed;
-    } catch (e) {
+    } catch (_e) {
       return SEED_DASARA_BRACKETS;
     }
   });
@@ -180,10 +214,12 @@ function App() {
   const [activeTab, setActiveTab] = useState('brackets');
   const [regenerateToast, setRegenerateToast] = useState(null);
   const [selectedDivisionId, setSelectedDivisionId] = useState('Male_Dasara_Under_56kg');
-  const [syncStatus, setSyncStatus] = useState('synced');
-  const [lastSyncTime, setLastSyncTime] = useState(new Date());
 
-  // Auto-save and live broadcast state to EvtMgr and backend
+  // Filter state for Divisions tab and Brackets tab
+  const [divFilterTier, setDivFilterTier] = useState('all'); // 'all' | 'Regular' | 'Freshers'
+  const [divFilterEvent, setDivFilterEvent] = useState('all'); // 'all' | Event Name
+
+  // Auto-save and live broadcast state
   useEffect(() => {
     try {
       const serialized = JSON.stringify(competitors);
@@ -191,9 +227,8 @@ function App() {
         localStorage.setItem('tkd_competitors_v3', serialized);
         localStorage.setItem('tkd_competitors_v1', serialized);
       }
-    } catch(e) {}
+    } catch(_e) {}
 
-    // Broadcast to parent window (EvtMgr iframe container) and opener
     const payload = {
       type: 'TKD_DRAWS_UPDATED',
       competitors,
@@ -202,14 +237,13 @@ function App() {
     };
     if (typeof window !== 'undefined') {
       if (window.parent && window.parent !== window) {
-        try { window.parent.postMessage(payload, '*'); } catch(e) {}
+        try { window.parent.postMessage(payload, '*'); } catch(_e) {}
       }
       if (window.opener && !window.opener.closed) {
-        try { window.opener.postMessage(payload, '*'); } catch(e) {}
+        try { window.opener.postMessage(payload, '*'); } catch(_e) {}
       }
     }
 
-    // Push to backend live-sync if available
     const endpoints = ['/api/live-sync', 'http://localhost:3000/api/live-sync'];
     endpoints.forEach(ep => {
       try {
@@ -218,9 +252,9 @@ function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ competitors, brackets, divisionCourts })
         }).catch(() => {});
-      } catch(e) {}
+      } catch(_e) {}
     });
-  }, [competitors]);
+  }, [competitors, brackets, divisionCourts]);
 
   useEffect(() => {
     try {
@@ -229,7 +263,7 @@ function App() {
         localStorage.setItem('tkd_brackets_v3', serialized);
         localStorage.setItem('tkd_match_updated', Date.now().toString());
       }
-    } catch(e) {}
+    } catch(_e) {}
 
     const payload = {
       type: 'TKD_DRAWS_UPDATED',
@@ -239,26 +273,15 @@ function App() {
     };
     if (typeof window !== 'undefined') {
       if (window.parent && window.parent !== window) {
-        try { window.parent.postMessage(payload, '*'); } catch(e) {}
+        try { window.parent.postMessage(payload, '*'); } catch(_e) {}
       }
       if (window.opener && !window.opener.closed) {
-        try { window.opener.postMessage(payload, '*'); } catch(e) {}
+        try { window.opener.postMessage(payload, '*'); } catch(_e) {}
       }
     }
+  }, [brackets, competitors, divisionCourts]);
 
-    const endpoints = ['/api/live-sync', 'http://localhost:3000/api/live-sync'];
-    endpoints.forEach(ep => {
-      try {
-        fetch(ep, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ competitors, brackets, divisionCourts })
-        }).catch(() => {});
-      } catch(e) {}
-    });
-  }, [brackets]);
-
-  // Live incoming synchronization from EvtMgr (postMessage, storage event, and server polling)
+  // Live incoming synchronization
   useEffect(() => {
     const reloadFromStorage = () => {
       try {
@@ -273,7 +296,6 @@ function App() {
             const parsed = JSON.parse(savedComps);
             if (Array.isArray(parsed) && parsed.length > 0) {
               const compMap = new Map();
-              // Preserve Dasara competitors always
               SEED_DASARA_COMPETITORS.forEach(c => compMap.set((c.id || c.name || '').toLowerCase(), c));
               parsed.forEach(c => {
                 const k = (c.id || c.name || '').toLowerCase();
@@ -281,7 +303,7 @@ function App() {
               });
               setCompetitors(Array.from(compMap.values()));
             }
-          } catch(e) {}
+          } catch(_e) {}
         }
         if (savedBrackets) {
           try {
@@ -293,18 +315,16 @@ function App() {
                 ...parsed
               }));
             }
-          } catch(e) {}
+          } catch(_e) {}
         }
         if (savedMode) setTournamentMode(savedMode);
         if (savedCourts) {
           try {
             const parsed = JSON.parse(savedCourts);
             if (parsed && typeof parsed === 'object') setDivisionCourts(parsed);
-          } catch(e) {}
+          } catch(_e) {}
         }
         if (savedTotalCourts) setTotalCourts(Number(savedTotalCourts));
-        setSyncStatus('synced');
-        setLastSyncTime(new Date());
       } catch (err) {
         console.warn('Storage sync notice:', err);
       }
@@ -327,87 +347,25 @@ function App() {
     window.addEventListener('message', handleMessage);
     window.addEventListener('storage', handleStorageEvent);
 
-    // Safe non-destructive background server synchronization
-    const checkServerData = async () => {
-      const endpoints = ['/api/live-sync', 'http://localhost:3000/api/live-sync'];
-      for (const ep of endpoints) {
-        try {
-          const res = await fetch(ep + '?t=' + Date.now());
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.success) {
-              if (data.competitors && Array.isArray(data.competitors) && data.competitors.length > 0) {
-                setCompetitors(prev => {
-                  const compMap = new Map();
-                  // 1. Keep seed Dasara competitors
-                  SEED_DASARA_COMPETITORS.forEach(c => compMap.set((c.id || c.name || '').toLowerCase(), c));
-                  // 2. Keep local state
-                  prev.forEach(c => compMap.set((c.id || c.name || '').toLowerCase(), c));
-                  // 3. Merge server competitors
-                  data.competitors.forEach(c => {
-                    const k = (c.id || c.name || '').toLowerCase();
-                    compMap.set(k, { ...(compMap.get(k) || {}), ...c });
-                  });
-                  const merged = Array.from(compMap.values());
-                  const serialized = JSON.stringify(merged);
-                  if (localStorage.getItem('tkd_competitors_v3') !== serialized) {
-                    localStorage.setItem('tkd_competitors_v3', serialized);
-                    localStorage.setItem('tkd_competitors_v1', serialized);
-                  }
-                  return merged;
-                });
-              }
-              if (data.brackets && typeof data.brackets === 'object' && Object.keys(data.brackets).length > 0) {
-                setBrackets(prev => {
-                  const merged = {
-                    ...SEED_DASARA_BRACKETS,
-                    ...prev,
-                    ...data.brackets
-                  };
-                  // Never allow Male_Dasara_Under_56kg to be cleared if it was seeded
-                  if (!merged['Male_Dasara_Under_56kg'] || merged['Male_Dasara_Under_56kg'].length === 0) {
-                    merged['Male_Dasara_Under_56kg'] = SEED_DASARA_BRACKETS['Male_Dasara_Under_56kg'];
-                  }
-                  const serialized = JSON.stringify(merged);
-                  if (localStorage.getItem('tkd_brackets_v3') !== serialized) {
-                    localStorage.setItem('tkd_brackets_v3', serialized);
-                  }
-                  return merged;
-                });
-              }
-              if (data.divisionCourts && typeof data.divisionCourts === 'object') {
-                setDivisionCourts(prev => ({ ...prev, ...data.divisionCourts }));
-              }
-              setSyncStatus('synced');
-              setLastSyncTime(new Date());
-              break;
-            }
-          }
-        } catch(e) {}
-      }
-    };
-
-    checkServerData();
-    const interval = setInterval(checkServerData, 4000);
-
     return () => {
       window.removeEventListener('message', handleMessage);
       window.removeEventListener('storage', handleStorageEvent);
-      clearInterval(interval);
     };
   }, []);
 
-
-  // Compute divisions dynamically based on tournamentMode
+  // Compute divisions dynamically — Strictly separating Regular and Freshers
   const divisions = useMemo(() => {
     const divs = {};
     if (tournamentMode === 'group4') {
       const categories = {};
       const ageMap = {
         'Senior': 'A-18',
+        'Over 17': 'A-18',
         'Junior': 'U-18',
         'Cadet': 'U-15',
-        'Sub-Junior': 'U-12'
+        'Sub-Junior': 'U-12',
+        'Sub Junior': 'U-12',
+        'Children': 'U-8'
       };
 
       competitors.forEach(c => {
@@ -437,6 +395,8 @@ function App() {
           divs[divId] = {
             id: divId,
             name: divName,
+            event: 'Kyorugi',
+            categoryType: 'Regular',
             count: groupComps.length,
             competitors: groupComps
           };
@@ -444,11 +404,16 @@ function App() {
       });
     } else {
       competitors.forEach(c => {
-        const wc = c.weightClass || 'Open';
-        const divId = `${c.gender}_${c.ageCategory}_${wc}`.replace(/\s+/g, '_');
-        const divName = `${c.gender} ${c.ageCategory} ${wc}`;
+        const { divId, divName, event: compEvent, categoryType: compTier } = getCompetitorDivision(c);
         if (!divs[divId]) {
-          divs[divId] = { id: divId, name: divName, count: 0, competitors: [] };
+          divs[divId] = { 
+            id: divId, 
+            name: divName, 
+            event: compEvent,
+            categoryType: compTier,
+            count: 0, 
+            competitors: [] 
+          };
         }
         divs[divId].count++;
         divs[divId].competitors.push(c);
@@ -456,6 +421,20 @@ function App() {
     }
     return divs;
   }, [competitors, tournamentMode]);
+
+  // Filtered divisions list based on active filters
+  const filteredDivisionsList = useMemo(() => {
+    return Object.values(divisions).filter(div => {
+      if (divFilterTier !== 'all' && (div.categoryType || 'Regular') !== divFilterTier) return false;
+      if (divFilterEvent !== 'all' && (div.event || 'Kyorugi') !== divFilterEvent) return false;
+      return true;
+    });
+  }, [divisions, divFilterTier, divFilterEvent]);
+
+  // Counts for filter pills
+  const totalDivCount = Object.keys(divisions).length;
+  const regularDivCount = Object.values(divisions).filter(d => (d.categoryType || 'Regular') === 'Regular').length;
+  const freshersDivCount = Object.values(divisions).filter(d => d.categoryType === 'Freshers').length;
 
   // Select Male_Dasara_Under_56kg by default or first available division
   useEffect(() => {
@@ -512,57 +491,11 @@ function App() {
   };
 
   const handleLoadSampleData = () => {
-    if (window.confirm("Load sample competitors? (This will overwrite current data)")) {
+    if (window.confirm("Load sample competitors with separate Regular and Freshers divisions? (This will reset current data)")) {
       const samples = tournamentMode === 'group4' ? SAMPLE_GROUP4_COMPETITORS : SAMPLE_COMPETITORS;
       setCompetitors(samples);
       setBrackets({});
       setSelectedDivisionId('');
-    }
-  };
-
-  const handleForceSyncNow = async () => {
-    setSyncStatus('syncing');
-    try {
-      // 1. Save local state
-      localStorage.setItem('tkd_competitors_v3', JSON.stringify(competitors));
-      localStorage.setItem('tkd_competitors_v1', JSON.stringify(competitors));
-      localStorage.setItem('tkd_brackets_v3', JSON.stringify(brackets));
-      localStorage.setItem('tkd_division_courts_v1', JSON.stringify(divisionCourts));
-      localStorage.setItem('tkd_match_updated', Date.now().toString());
-
-      // 2. Broadcast to parent window / iframe container
-      const payload = {
-        type: 'TKD_DRAWS_UPDATED',
-        competitors,
-        brackets,
-        courts: divisionCourts
-      };
-      if (typeof window !== 'undefined') {
-        if (window.parent && window.parent !== window) {
-          try { window.parent.postMessage(payload, '*'); } catch(e) {}
-        }
-        if (window.opener && !window.opener.closed) {
-          try { window.opener.postMessage(payload, '*'); } catch(e) {}
-        }
-      }
-
-      // 3. Push to server endpoints
-      const endpoints = ['/api/live-sync', 'http://localhost:3000/api/live-sync'];
-      for (const ep of endpoints) {
-        try {
-          await fetch(ep, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ competitors, brackets, divisionCourts })
-          });
-        } catch(e) {}
-      }
-      setSyncStatus('synced');
-      setLastSyncTime(new Date());
-      alert('Tournament data synchronized successfully with EvtMgr and server!');
-    } catch(err) {
-      setSyncStatus('error');
-      alert('Sync notice: ' + (err.message || 'Synced locally and broadcasted to EvtMgr'));
     }
   };
 
@@ -576,7 +509,6 @@ function App() {
         if (data.competitors && Array.isArray(data.competitors)) {
           setCompetitors(data.competitors);
           setBrackets(data.brackets || {});
-
           alert("Tournament data imported successfully!");
         } else {
           alert("Invalid data format. File must contain 'competitors' list.");
@@ -601,6 +533,10 @@ function App() {
     downloadAnchor.remove();
   };
 
+  // Group filtered divisions into Freshers and Regular for Brackets select
+  const freshersDivisions = filteredDivisionsList.filter(d => d.categoryType === 'Freshers');
+  const regularDivisions = filteredDivisionsList.filter(d => (d.categoryType || 'Regular') === 'Regular');
+
   return (
     <div className="app-layout">
       <header className="app-header no-print">
@@ -623,7 +559,7 @@ function App() {
             className={`nav-tab ${activeTab === 'divisions' ? 'active' : ''}`}
             onClick={() => setActiveTab('divisions')}
           >
-            Divisions ({Object.keys(divisions).length})
+            Divisions ({totalDivCount})
           </button>
           <button 
             className={`nav-tab ${activeTab === 'brackets' ? 'active' : ''}`}
@@ -670,20 +606,77 @@ function App() {
                 <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>(Same academy players separated)</span>
               </div>
             )}
-            <div className="card-title">
-              <span>Active Divisions ({Object.keys(divisions).length})</span>
+            
+            <div className="card-title" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Active Divisions ({totalDivCount})</span>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.75rem' }} className="no-print">
                 <button className="btn btn-primary btn-sm" onClick={handleGenerateAllBrackets}>
                   Generate All Brackets
                 </button>
               </div>
             </div>
+
+            {/* Quick Filter Bar for Divisions */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginTop: '0.5rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
+              <div className="filter-pills-container">
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tier:</span>
+                <button 
+                  type="button" 
+                  className={`filter-pill ${divFilterTier === 'all' ? 'active' : ''}`}
+                  onClick={() => setDivFilterTier('all')}
+                >
+                  All ({totalDivCount})
+                </button>
+                <button 
+                  type="button" 
+                  className={`filter-pill ${divFilterTier === 'Regular' ? 'active-blue' : ''}`}
+                  onClick={() => setDivFilterTier('Regular')}
+                >
+                  ⭐ Regular ({regularDivCount})
+                </button>
+                <button 
+                  type="button" 
+                  className={`filter-pill ${divFilterTier === 'Freshers' ? 'active-green' : ''}`}
+                  onClick={() => setDivFilterTier('Freshers')}
+                >
+                  🌱 Freshers ({freshersDivCount})
+                </button>
+              </div>
+
+              <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border-color)' }} />
+
+              <div className="filter-pills-container">
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Event:</span>
+                <button 
+                  type="button" 
+                  className={`filter-pill ${divFilterEvent === 'all' ? 'active' : ''}`}
+                  onClick={() => setDivFilterEvent('all')}
+                >
+                  All Events
+                </button>
+                {EVENT_TYPES.map(ev => {
+                  const count = Object.values(divisions).filter(d => (d.event || 'Kyorugi') === ev).length;
+                  if (count === 0 && divFilterEvent !== ev) return null;
+                  return (
+                    <button 
+                      key={ev}
+                      type="button" 
+                      className={`filter-pill ${divFilterEvent === ev ? 'active' : ''}`}
+                      onClick={() => setDivFilterEvent(ev)}
+                    >
+                      {ev} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             
-            <div className="table-container" style={{ marginTop: '1rem' }}>
+            <div className="table-container">
               <table className="custom-table">
                 <thead>
                   <tr>
                     <th>Division Name</th>
+                    <th>Category Tier</th>
                     <th>Competitors</th>
                     <th>Bracket Status</th>
                     <th>Court / Ring</th>
@@ -691,73 +684,86 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.values(divisions).length === 0 ? (
+                  {filteredDivisionsList.length === 0 ? (
                     <tr>
-                      <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                        No competitors registered yet. Please add competitors first.
+                      <td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                        No divisions found matching the selected filter criteria.
                       </td>
                     </tr>
                   ) : (
-                    Object.values(divisions).map(div => (
-                      <tr key={div.id}>
-                        <td><strong>{div.name}</strong></td>
-                        <td>{div.count} Athletes</td>
-                        <td>
-                          {brackets[div.id] ? (
-                            <span className="badge badge-blue">Generated ({brackets[div.id].length} Rounds)</span>
-                          ) : (
-                            <span className="badge badge-gray">Not Generated</span>
-                          )}
-                        </td>
-                        <td>
-                          <select
-                            className="form-control"
-                            style={{ width: 'auto', minWidth: '110px', fontSize: '0.85rem', padding: '0.3rem 0.5rem' }}
-                            value={divisionCourts[div.id] || ''}
-                            onChange={(e) => handleAssignCourt(div.id, e.target.value)}
-                          >
-                            <option value="">Unassigned</option>
-                            {Array.from({ length: totalCourts }, (_, i) => i + 1).map(courtNum => (
-                              <option key={courtNum} value={courtNum}>
-                                Court {courtNum}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="no-print" style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
-                            <button 
-                              className="btn btn-secondary btn-sm" 
-                              onClick={() => {
-                                const isAlreadyGenerated = !!brackets[div.id];
-                                handleGenerateBracket(div.id);
-                                if (!isAlreadyGenerated) {
-                                  setSelectedDivisionId(div.id);
-                                  setActiveTab('brackets');
-                                } else {
-                                  setRegenerateToast(div.name);
-                                  setTimeout(() => setRegenerateToast(null), 3000);
-                                }
-                              }}
-                              disabled={div.count < 2}
-                            >
-                              {brackets[div.id] ? 'Regenerate' : 'Generate'}
-                            </button>
-                            {brackets[div.id] && (
-                              <button 
-                                className="btn btn-primary btn-sm"
-                                onClick={() => {
-                                  setSelectedDivisionId(div.id);
-                                  setActiveTab('brackets');
-                                }}
-                              >
-                                View Bracket
-                              </button>
+                    filteredDivisionsList.map(div => {
+                      const isFreshers = div.categoryType === 'Freshers';
+                      return (
+                        <tr key={div.id}>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span className="badge badge-purple">{div.event || 'Kyorugi'}</span>
+                              <strong>{div.name}</strong>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`badge ${isFreshers ? 'badge-green' : 'badge-blue'}`}>
+                              {isFreshers ? '🌱 Freshers' : '⭐ Regular'}
+                            </span>
+                          </td>
+                          <td>{div.count} Athletes</td>
+                          <td>
+                            {brackets[div.id] ? (
+                              <span className="badge badge-blue">Generated ({brackets[div.id].length} Rounds)</span>
+                            ) : (
+                              <span className="badge badge-gray">Not Generated</span>
                             )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                          <td>
+                            <select
+                              className="form-control"
+                              style={{ width: 'auto', minWidth: '110px', fontSize: '0.85rem', padding: '0.3rem 0.5rem' }}
+                              value={divisionCourts[div.id] || ''}
+                              onChange={(e) => handleAssignCourt(div.id, e.target.value)}
+                            >
+                              <option value="">Unassigned</option>
+                              {Array.from({ length: totalCourts }, (_, i) => i + 1).map(courtNum => (
+                                <option key={courtNum} value={courtNum}>
+                                  Court {courtNum}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="no-print" style={{ textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                              <button 
+                                className="btn btn-secondary btn-sm" 
+                                onClick={() => {
+                                  const isAlreadyGenerated = !!brackets[div.id];
+                                  handleGenerateBracket(div.id);
+                                  if (!isAlreadyGenerated) {
+                                    setSelectedDivisionId(div.id);
+                                    setActiveTab('brackets');
+                                  } else {
+                                    setRegenerateToast(div.name);
+                                    setTimeout(() => setRegenerateToast(null), 3000);
+                                  }
+                                }}
+                                disabled={div.count < 2}
+                              >
+                                {brackets[div.id] ? 'Regenerate' : 'Generate'}
+                              </button>
+                              {brackets[div.id] && (
+                                <button 
+                                  className="btn btn-primary btn-sm"
+                                  onClick={() => {
+                                    setSelectedDivisionId(div.id);
+                                    setActiveTab('brackets');
+                                  }}
+                                >
+                                  View Bracket
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -768,18 +774,96 @@ function App() {
 
         {activeTab === 'brackets' && (
           <div className="card">
-            <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <span>{selectedDivisionId && divisions[selectedDivisionId] ? divisions[selectedDivisionId].name : 'Bracket Viewer'}</span>
+            {/* Filter Pills for Brackets */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
+              <div className="filter-pills-container">
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tier:</span>
+                <button 
+                  type="button" 
+                  className={`filter-pill ${divFilterTier === 'all' ? 'active' : ''}`}
+                  onClick={() => setDivFilterTier('all')}
+                >
+                  All ({totalDivCount})
+                </button>
+                <button 
+                  type="button" 
+                  className={`filter-pill ${divFilterTier === 'Regular' ? 'active-blue' : ''}`}
+                  onClick={() => setDivFilterTier('Regular')}
+                >
+                  ⭐ Regular ({regularDivCount})
+                </button>
+                <button 
+                  type="button" 
+                  className={`filter-pill ${divFilterTier === 'Freshers' ? 'active-green' : ''}`}
+                  onClick={() => setDivFilterTier('Freshers')}
+                >
+                  🌱 Freshers ({freshersDivCount})
+                </button>
+              </div>
+
+              <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border-color)' }} />
+
+              <div className="filter-pills-container">
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Event:</span>
+                <button 
+                  type="button" 
+                  className={`filter-pill ${divFilterEvent === 'all' ? 'active' : ''}`}
+                  onClick={() => setDivFilterEvent('all')}
+                >
+                  All Events
+                </button>
+                {EVENT_TYPES.map(ev => {
+                  const count = Object.values(divisions).filter(d => (d.event || 'Kyorugi') === ev).length;
+                  if (count === 0 && divFilterEvent !== ev) return null;
+                  return (
+                    <button 
+                      key={ev}
+                      type="button" 
+                      className={`filter-pill ${divFilterEvent === ev ? 'active' : ''}`}
+                      onClick={() => setDivFilterEvent(ev)}
+                    >
+                      {ev} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="card-title" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {selectedDivisionId && divisions[selectedDivisionId] && (
+                  <span className={`badge ${divisions[selectedDivisionId].categoryType === 'Freshers' ? 'badge-green' : 'badge-blue'}`}>
+                    {divisions[selectedDivisionId].categoryType === 'Freshers' ? '🌱 Freshers' : '⭐ Regular'}
+                  </span>
+                )}
+                <span>{selectedDivisionId && divisions[selectedDivisionId] ? divisions[selectedDivisionId].name : 'Bracket Viewer'}</span>
+              </div>
+
               <select 
                 value={selectedDivisionId}
                 onChange={(e) => setSelectedDivisionId(e.target.value)}
                 className="form-control"
-                style={{ width: 'auto', minWidth: '250px' }}
+                style={{ width: 'auto', minWidth: '280px' }}
               >
                 <option value="" disabled>Select a division</option>
-                {Object.values(divisions).map(div => (
-                  <option key={div.id} value={div.id}>{div.name} ({div.count} players)</option>
-                ))}
+                {freshersDivisions.length > 0 && (
+                  <optgroup label="🌱 Freshers Divisions">
+                    {freshersDivisions.map(div => (
+                      <option key={div.id} value={div.id}>
+                        {div.name} ({div.count} players)
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {regularDivisions.length > 0 && (
+                  <optgroup label="⭐ Regular Divisions">
+                    {regularDivisions.map(div => (
+                      <option key={div.id} value={div.id}>
+                        {div.name} ({div.count} players)
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
               
               {selectedDivisionId && !brackets[selectedDivisionId] && (
