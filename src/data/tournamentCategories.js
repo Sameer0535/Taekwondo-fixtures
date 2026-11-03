@@ -1,13 +1,15 @@
 // Official Tournament Structure & Weight Categories
 // Enforces separate Regular and Freshers divisions across all official events:
-// Kyorugi, Poomsae, Speed Kicking, Breaking, and Virtual Taekwondo.
+// Kyorugi, Poomsae, Speed Kicking, Breaking, Virtual Taekwondo, Dasara, and Para K41/K44.
 
 export const EVENT_TYPES = [
   'Kyorugi',
   'Poomsae',
   'Speed Kicking',
   'Breaking',
-  'Virtual Taekwondo'
+  'Virtual Taekwondo',
+  'Dasara',
+  'Para K41/K44'
 ];
 
 export const CATEGORY_TIERS = ['Regular', 'Freshers'];
@@ -236,6 +238,19 @@ export const WEIGHT_CATEGORIES = {
   }
 };
 
+// Official Poomsae Regular Individual Divisions from regulation chart
+export const POOMSAE_REGULAR_INDIVIDUAL_DIVISIONS = [
+  'Junior I (Under 12 Years)',
+  'Junior II (Under 15 Years)',
+  'Junior III (Under 18 Years)',
+  'Senior I (Under 29 Years)',
+  'Senior II (Under 39 Years)',
+  'Senior III (Under 49 Years)',
+  'Senior IV (Under 59 Years)',
+  'Master I (Under 69 Years)',
+  'Master II (Over 70 Years)'
+];
+
 // Full structured definitions per event and tier matching the regulation tables
 export const TOURNAMENT_STRUCTURE = {
   Kyorugi: {
@@ -275,7 +290,7 @@ export const TOURNAMENT_STRUCTURE = {
       subCategories: [
         {
           id: 'Recognised Individual',
-          name: 'Recognised Poomsae Individual',
+          name: 'Recognised Individual',
           ageDivisions: ['Children', 'Sub Junior', 'Cadet'],
           genders: ['Male', 'Female'],
           hasWeights: false,
@@ -283,7 +298,7 @@ export const TOURNAMENT_STRUCTURE = {
         },
         {
           id: 'Recognised Mix Pair',
-          name: 'Recognised Poomsae Mix Pair',
+          name: 'Recognised Mix Pair',
           ageDivisions: ['Children', 'Sub Junior', 'Cadet'],
           genders: ['Mix Pair'],
           hasWeights: false,
@@ -303,16 +318,16 @@ export const TOURNAMENT_STRUCTURE = {
       subCategories: [
         {
           id: 'Recognised Individual',
-          name: 'Recognised Poomsae Individual',
-          ageDivisions: ['Sub Junior', 'Cadet', 'Junior', 'U30 Yrs', 'U 40 yrs', 'U 50 yrs', 'U 60 Yrs', 'U 65 Yrs', 'O 65 Yrs'],
+          name: 'Recognised Individual',
+          ageDivisions: POOMSAE_REGULAR_INDIVIDUAL_DIVISIONS,
           genders: ['Male', 'Female'],
           hasWeights: false,
           defaultWeight: 'Individual'
         },
         {
           id: 'Recognised Mix Pair',
-          name: 'Recognised Poomsae Mix Pair',
-          ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'U30 Yrs', 'U 40 yrs', 'U 50 yrs', 'U 60 Yrs', 'O 60 Yrs'],
+          name: 'Recognised Mix Pair',
+          ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Under 30 Yrs', 'Under 40 Yrs', 'Under 50 Yrs', 'Under 60 Yrs', 'Over 60 Yrs'],
           genders: ['Mix Pair'],
           hasWeights: false,
           defaultWeight: 'Mix Pair'
@@ -320,7 +335,7 @@ export const TOURNAMENT_STRUCTURE = {
         {
           id: 'Recognised Team',
           name: 'Recognised Team (3 athletes)',
-          ageDivisions: ['Cadet', 'Junior', 'U30 Yrs', 'U 40 yrs', 'U 50 yrs', 'U 60 Yrs', 'O 60 Yrs'],
+          ageDivisions: ['Cadet', 'Junior', 'Under 30 Yrs', 'Under 40 Yrs', 'Under 50 Yrs', 'Under 60 Yrs', 'Over 60 Yrs'],
           genders: ['Male Team', 'Female Team'],
           hasWeights: false,
           defaultWeight: 'Team of 3'
@@ -333,7 +348,7 @@ export const TOURNAMENT_STRUCTURE = {
       subCategories: [
         {
           id: 'Front Kick',
-          name: 'Speed Kicking Individual - Front Kick',
+          name: 'Speed Kicking - Front Kick',
           ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Over 17'],
           genders: ['Male', 'Female'],
           hasWeights: false,
@@ -345,7 +360,7 @@ export const TOURNAMENT_STRUCTURE = {
       subCategories: [
         {
           id: 'Round House Kick',
-          name: 'Speed Kicking Individual - Round House Kick',
+          name: 'Speed Kicking - Round House Kick',
           ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Over 17'],
           genders: ['Male', 'Female'],
           hasWeights: false,
@@ -353,7 +368,7 @@ export const TOURNAMENT_STRUCTURE = {
         },
         {
           id: 'Turning Kick',
-          name: 'Speed Kicking Individual - Turning Kick',
+          name: 'Speed Kicking - Turning Kick',
           ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Over 17'],
           genders: ['Male', 'Female'],
           hasWeights: false,
@@ -449,7 +464,7 @@ export const TOURNAMENT_STRUCTURE = {
       subCategories: [
         {
           id: 'Individual',
-          name: 'Virtual Taekwondo Male/Female Individual',
+          name: 'Virtual Taekwondo Individual',
           ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Senior'],
           genders: ['Male', 'Female'],
           hasWeights: false,
@@ -469,7 +484,7 @@ export const TOURNAMENT_STRUCTURE = {
       subCategories: [
         {
           id: 'Individual',
-          name: 'Virtual Taekwondo Male/Female Individual',
+          name: 'Virtual Taekwondo Individual',
           ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Senior'],
           genders: ['Male', 'Female'],
           hasWeights: false,
@@ -485,21 +500,80 @@ export const TOURNAMENT_STRUCTURE = {
         }
       ]
     }
+  },
+  Dasara: {
+    Regular: {
+      subCategories: [
+        {
+          id: 'Individual',
+          name: 'Dasara Individual',
+          ageDivisions: ['Dasara'],
+          genders: ['Male', 'Female'],
+          hasWeights: true
+        }
+      ]
+    },
+    Freshers: {
+      subCategories: [
+        {
+          id: 'Individual',
+          name: 'Dasara Individual',
+          ageDivisions: ['Dasara'],
+          genders: ['Male', 'Female'],
+          hasWeights: true
+        }
+      ]
+    }
+  },
+  'Para K41/K44': {
+    Regular: {
+      subCategories: [
+        {
+          id: 'Individual',
+          name: 'Para K41/K44 Individual',
+          ageDivisions: ['Para K41/K44'],
+          genders: ['Male', 'Female'],
+          hasWeights: true
+        }
+      ]
+    },
+    Freshers: {
+      subCategories: [
+        {
+          id: 'Individual',
+          name: 'Para K41/K44 Individual',
+          ageDivisions: ['Para K41/K44'],
+          genders: ['Male', 'Female'],
+          hasWeights: true
+        }
+      ]
+    }
   }
 };
 
 /**
- * Derives a division ID and human-readable Name for any competitor,
- * strictly keeping Regular and Freshers separate.
+ * Derives a division ID and clean human-readable Name for any competitor,
+ * strictly keeping Regular and Freshers separate, with zero emojis.
  */
 export function getCompetitorDivision(c) {
-  // 1. Maintain 100% backward compatibility for Dasara seed brackets
-  if (c.ageCategory === 'Dasara' && (!c.event || c.event === 'Kyorugi') && (!c.categoryType || c.categoryType === 'Regular')) {
+  // 1. Maintain 100% backward compatibility for Dasara
+  if (c.ageCategory === 'Dasara' || c.event === 'Dasara') {
     const wc = c.weightClass || 'Under 56kg';
     return {
       divId: `${c.gender}_Dasara_${wc}`.replace(/\s+/g, '_'),
       divName: `${c.gender} Dasara ${wc}`,
-      event: 'Kyorugi',
+      event: 'Dasara',
+      categoryType: 'Regular'
+    };
+  }
+
+  // 2. Para K41/K44
+  if (c.ageCategory === 'Para K41/K44' || c.event === 'Para K41/K44') {
+    const wc = c.weightClass || 'K41/K44 -58 kg';
+    return {
+      divId: `Para_K41_K44_${c.gender}_${wc}`.replace(/[\s/-]+/g, '_'),
+      divName: `Para K41/K44 ${c.gender} ${wc}`,
+      event: 'Para K41/K44',
       categoryType: 'Regular'
     };
   }
@@ -523,11 +597,8 @@ export function getCompetitorDivision(c) {
   }
   const divId = idParts.map(clean).filter(Boolean).join('_');
 
-  // Human-readable title
-  let nameParts = [];
-  nameParts.push(`${event} (${categoryType})`);
-  nameParts.push(gender);
-  nameParts.push(ageCat);
+  // Human-readable title without emojis
+  let nameParts = [`${event} (${categoryType})`, gender, ageCat];
   if (subCat && subCat !== 'Individual' && !wc.includes(subCat)) {
     nameParts.push(subCat);
   }

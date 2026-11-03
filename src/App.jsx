@@ -632,14 +632,14 @@ function App() {
                   className={`filter-pill ${divFilterTier === 'Regular' ? 'active-blue' : ''}`}
                   onClick={() => setDivFilterTier('Regular')}
                 >
-                  ⭐ Regular ({regularDivCount})
+                  Regular ({regularDivCount})
                 </button>
                 <button 
                   type="button" 
                   className={`filter-pill ${divFilterTier === 'Freshers' ? 'active-green' : ''}`}
                   onClick={() => setDivFilterTier('Freshers')}
                 >
-                  🌱 Freshers ({freshersDivCount})
+                  Freshers ({freshersDivCount})
                 </button>
               </div>
 
@@ -703,7 +703,7 @@ function App() {
                           </td>
                           <td>
                             <span className={`badge ${isFreshers ? 'badge-green' : 'badge-blue'}`}>
-                              {isFreshers ? '🌱 Freshers' : '⭐ Regular'}
+                              {isFreshers ? 'Freshers' : 'Regular'}
                             </span>
                           </td>
                           <td>{div.count} Athletes</td>
@@ -790,14 +790,14 @@ function App() {
                   className={`filter-pill ${divFilterTier === 'Regular' ? 'active-blue' : ''}`}
                   onClick={() => setDivFilterTier('Regular')}
                 >
-                  ⭐ Regular ({regularDivCount})
+                  Regular ({regularDivCount})
                 </button>
                 <button 
                   type="button" 
                   className={`filter-pill ${divFilterTier === 'Freshers' ? 'active-green' : ''}`}
                   onClick={() => setDivFilterTier('Freshers')}
                 >
-                  🌱 Freshers ({freshersDivCount})
+                  Freshers ({freshersDivCount})
                 </button>
               </div>
 
@@ -833,7 +833,7 @@ function App() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {selectedDivisionId && divisions[selectedDivisionId] && (
                   <span className={`badge ${divisions[selectedDivisionId].categoryType === 'Freshers' ? 'badge-green' : 'badge-blue'}`}>
-                    {divisions[selectedDivisionId].categoryType === 'Freshers' ? '🌱 Freshers' : '⭐ Regular'}
+                    {divisions[selectedDivisionId].categoryType === 'Freshers' ? 'Freshers' : 'Regular'}
                   </span>
                 )}
                 <span>{selectedDivisionId && divisions[selectedDivisionId] ? divisions[selectedDivisionId].name : 'Bracket Viewer'}</span>
@@ -847,7 +847,7 @@ function App() {
               >
                 <option value="" disabled>Select a division</option>
                 {freshersDivisions.length > 0 && (
-                  <optgroup label="🌱 Freshers Divisions">
+                  <optgroup label="Freshers Divisions">
                     {freshersDivisions.map(div => (
                       <option key={div.id} value={div.id}>
                         {div.name} ({div.count} players)
@@ -856,7 +856,7 @@ function App() {
                   </optgroup>
                 )}
                 {regularDivisions.length > 0 && (
-                  <optgroup label="⭐ Regular Divisions">
+                  <optgroup label="Regular Divisions">
                     {regularDivisions.map(div => (
                       <option key={div.id} value={div.id}>
                         {div.name} ({div.count} players)

@@ -7,6 +7,8 @@ import {
   TOURNAMENT_STRUCTURE 
 } from '../data/tournamentCategories';
 
+const GROUP4_AGE_CLASSES = ['U-4', 'U-6', 'U-8', 'U-10', 'U-12', 'U-15', 'U-18', 'A-18'];
+
 function CompetitorList({ 
   competitors, 
   setCompetitors, 
@@ -25,10 +27,8 @@ function CompetitorList({
   const [categoryType, setCategoryType] = useState('Regular'); // 'Regular' | 'Freshers'
   const [subCategory, setSubCategory] = useState('Individual');
   const [gender, setGender] = useState('Male');
-  const [ageCategory, setAgeCategory] = useState('Over 17');
+  const [ageCategory, setAgeCategory] = useState('Senior');
   const [weightClass, setWeightClass] = useState('Under 68kg');
-
-  const GROUP4_AGE_CLASSES = ['U-4', 'U-6', 'U-8', 'U-10', 'U-12', 'U-15', 'U-18', 'A-18'];
 
   // Current event configuration
   const currentEventConfig = TOURNAMENT_STRUCTURE[event] || TOURNAMENT_STRUCTURE['Kyorugi'];
@@ -49,8 +49,8 @@ function CompetitorList({
       }
     } else {
       if (GROUP4_AGE_CLASSES.includes(ageCategory)) {
-        setAgeCategory('Over 17');
-        const weights = WEIGHT_CATEGORIES['Over 17']?.[gender] || [];
+        setAgeCategory('Senior');
+        const weights = WEIGHT_CATEGORIES['Senior']?.[gender] || [];
         if (weights.length > 0) setWeightClass(weights[0].value);
       }
     }
@@ -90,7 +90,7 @@ function CompetitorList({
         const weights = WEIGHT_CATEGORIES[newAge]?.[newGender] || [];
         setWeightClass(weights.length > 0 ? weights[0].value : '');
       } else {
-        setWeightClass(firstSub.defaultWeight || '');
+        setWeightClass(firstSub.defaultWeight || firstSub.name || '');
       }
     }
   };
@@ -112,7 +112,7 @@ function CompetitorList({
         const weights = WEIGHT_CATEGORIES[newAge]?.[newGender] || [];
         setWeightClass(weights.length > 0 ? weights[0].value : '');
       } else {
-        setWeightClass(firstSub.defaultWeight || '');
+        setWeightClass(firstSub.defaultWeight || firstSub.name || '');
       }
     }
   };
@@ -131,7 +131,7 @@ function CompetitorList({
         const weights = WEIGHT_CATEGORIES[newAge]?.[newGender] || [];
         setWeightClass(weights.length > 0 ? weights[0].value : '');
       } else {
-        setWeightClass(sub.defaultWeight || '');
+        setWeightClass(sub.defaultWeight || sub.name || '');
       }
     }
   };
@@ -163,7 +163,7 @@ function CompetitorList({
   const [bulkCategoryType, setBulkCategoryType] = useState('Regular');
   const [bulkSubCategory, setBulkSubCategory] = useState('Individual');
   const [bulkGender, setBulkGender] = useState('Male');
-  const [bulkAgeCategory, setBulkAgeCategory] = useState('Over 17');
+  const [bulkAgeCategory, setBulkAgeCategory] = useState('Senior');
   const [bulkWeightClass, setBulkWeightClass] = useState('Under 68kg');
 
   const bulkEventCfg = TOURNAMENT_STRUCTURE[bulkEvent] || TOURNAMENT_STRUCTURE['Kyorugi'];
@@ -171,6 +171,7 @@ function CompetitorList({
   const bulkSubCats = bulkTierCfg.subCategories || [];
   const bulkActiveSub = bulkSubCats.find(s => s.id === bulkSubCategory) || bulkSubCats[0] || {
     id: 'Individual',
+    name: 'Individual',
     ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Over 17'],
     genders: ['Male', 'Female'],
     hasWeights: true
@@ -193,7 +194,7 @@ function CompetitorList({
         const weights = WEIGHT_CATEGORIES[newAge]?.[newGender] || [];
         setBulkWeightClass(weights.length > 0 ? weights[0].value : '');
       } else {
-        setBulkWeightClass(firstSub.defaultWeight || '');
+        setBulkWeightClass(firstSub.defaultWeight || firstSub.name || '');
       }
     }
   };
@@ -215,7 +216,7 @@ function CompetitorList({
         const weights = WEIGHT_CATEGORIES[newAge]?.[newGender] || [];
         setBulkWeightClass(weights.length > 0 ? weights[0].value : '');
       } else {
-        setBulkWeightClass(firstSub.defaultWeight || '');
+        setBulkWeightClass(firstSub.defaultWeight || firstSub.name || '');
       }
     }
   };
@@ -234,7 +235,7 @@ function CompetitorList({
       subCategory: tournamentMode === 'group4' ? 'Individual' : (activeSubCat.id || subCategory),
       gender,
       ageCategory,
-      weightClass: tournamentMode === 'group4' ? '' : (activeSubCat.hasWeights ? weightClass : (activeSubCat.defaultWeight || '')),
+      weightClass: tournamentMode === 'group4' ? '' : (activeSubCat.hasWeights ? weightClass : (activeSubCat.defaultWeight || activeSubCat.name || '')),
       rank: '',
       seed: null
     };
@@ -257,7 +258,7 @@ function CompetitorList({
         const compClub = parts[1] || 'Independent';
         const compGender = parts.length >= 5 ? parts[2] : bulkGender;
         const compAgeCategory = parts.length >= 5 ? parts[3] : bulkAgeCategory;
-        const compWeightClass = parts.length >= 5 ? parts[4] : (tournamentMode === 'group4' ? '' : (bulkActiveSub.hasWeights ? bulkWeightClass : (bulkActiveSub.defaultWeight || '')));
+        const compWeightClass = parts.length >= 5 ? parts[4] : (tournamentMode === 'group4' ? '' : (bulkActiveSub.hasWeights ? bulkWeightClass : (bulkActiveSub.defaultWeight || bulkActiveSub.name || '')));
         const compCountry = parts.length >= 6 ? parts[5].toUpperCase() : 'IND';
         const compTier = parts.length >= 7 ? parts[6] : bulkCategoryType;
         const compEvent = parts.length >= 8 ? parts[7] : bulkEvent;
@@ -307,7 +308,7 @@ function CompetitorList({
   const selectedCountryObj = COUNTRY_LIST.find(c => c.noc === country);
   const selectedLabel = country === 'none' ? 'No Flag' : (selectedCountryObj ? `${selectedCountryObj.name} (${selectedCountryObj.noc})` : 'India (IND)');
 
-  // Competitor list filters
+  // Competitor list filters (no emojis)
   const [filterTier, setFilterTier] = useState('all'); // 'all' | 'Regular' | 'Freshers'
   const [filterEvent, setFilterEvent] = useState('all'); // 'all' | event name
   const [searchQuery, setSearchQuery] = useState('');
@@ -532,7 +533,7 @@ function CompetitorList({
               </div>
             </div>
 
-            {/* Event & Category Tier (Regular vs Freshers) */}
+            {/* Event & Category Tier (Regular vs Freshers - No Emojis) */}
             {tournamentMode !== 'group4' && (
               <>
                 <div className="form-group">
@@ -552,7 +553,7 @@ function CompetitorList({
                   <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Category Tier</span>
                     <span style={{ fontSize: '0.75rem', fontWeight: 600, color: categoryType === 'Freshers' ? '#047857' : '#2563eb' }}>
-                      {categoryType === 'Freshers' ? '🌱 Freshers (Separate)' : '⭐ Regular (Separate)'}
+                      {categoryType === 'Freshers' ? 'Freshers (Separate)' : 'Regular (Separate)'}
                     </span>
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -595,21 +596,19 @@ function CompetitorList({
                   </div>
                 </div>
 
-                {/* Sub-Category / Technique selector when event has multiple */}
-                {currentSubCats.length > 1 && (
-                  <div className="form-group">
-                    <label className="form-label">Discipline / Format</label>
-                    <select 
-                      className="form-control" 
-                      value={subCategory} 
-                      onChange={e => handleSubCategoryChange(e.target.value)}
-                    >
-                      {currentSubCats.map(sc => (
-                        <option key={sc.id} value={sc.id}>{sc.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                {/* Always-visible Category / Format Selector */}
+                <div className="form-group">
+                  <label className="form-label">Competition Category / Format</label>
+                  <select 
+                    className="form-control" 
+                    value={subCategory} 
+                    onChange={e => handleSubCategoryChange(e.target.value)}
+                  >
+                    {currentSubCats.map(sc => (
+                      <option key={sc.id} value={sc.id}>{sc.name}</option>
+                    ))}
+                  </select>
+                </div>
               </>
             )}
 
@@ -639,7 +638,7 @@ function CompetitorList({
                       <option key={ac} value={ac}>{ac}</option>
                     ))
                   ) : (
-                    (activeSubCat.ageDivisions || ['Over 17']).map(ac => (
+                    (activeSubCat.ageDivisions || ['Senior']).map(ac => (
                       <option key={ac} value={ac}>{ac}</option>
                     ))
                   )}
@@ -647,19 +646,33 @@ function CompetitorList({
               </div>
             </div>
 
-            {tournamentMode !== 'group4' && activeSubCat.hasWeights && (
-              <div className="form-group">
-                <label className="form-label">Weight Category</label>
-                <select 
-                  className="form-control" 
-                  value={weightClass} 
-                  onChange={e => setWeightClass(e.target.value)}
-                >
-                  {(WEIGHT_CATEGORIES[ageCategory]?.[gender] || WEIGHT_CATEGORIES['Over 17']?.[gender] || []).map(wc => (
-                    <option key={wc.value} value={wc.value}>{wc.label}</option>
-                  ))}
-                </select>
-              </div>
+            {/* Weight Category for Weight events, or Category Badge indicator */}
+            {tournamentMode !== 'group4' && (
+              activeSubCat.hasWeights ? (
+                <div className="form-group">
+                  <label className="form-label">Weight Category</label>
+                  <select 
+                    className="form-control" 
+                    value={weightClass} 
+                    onChange={e => setWeightClass(e.target.value)}
+                  >
+                    {(WEIGHT_CATEGORIES[ageCategory]?.[gender] || WEIGHT_CATEGORIES['Senior']?.[gender] || []).map(wc => (
+                      <option key={wc.value} value={wc.value}>{wc.label}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="form-group">
+                  <label className="form-label">Event Category / Class</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={activeSubCat.name || activeSubCat.defaultWeight || 'Standard'} 
+                    disabled 
+                    style={{ backgroundColor: '#f8fafc', color: 'var(--text-muted)' }}
+                  />
+                </div>
+              )
             )}
 
             <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
@@ -721,21 +734,19 @@ function CompetitorList({
                 </select>
               </div>
 
-              {bulkSubCats.length > 1 && (
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Discipline</label>
-                  <select 
-                    className="form-control" 
-                    style={{ fontSize: '0.85rem' }} 
-                    value={bulkSubCategory} 
-                    onChange={e => setBulkSubCategory(e.target.value)}
-                  >
-                    {bulkSubCats.map(sc => (
-                      <option key={sc.id} value={sc.id}>{sc.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.75rem' }}>Category / Format</label>
+                <select 
+                  className="form-control" 
+                  style={{ fontSize: '0.85rem' }} 
+                  value={bulkSubCategory} 
+                  onChange={e => setBulkSubCategory(e.target.value)}
+                >
+                  {bulkSubCats.map(sc => (
+                    <option key={sc.id} value={sc.id}>{sc.name}</option>
+                  ))}
+                </select>
+              </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ fontSize: '0.75rem' }}>Gender</label>
@@ -773,7 +784,7 @@ function CompetitorList({
                     }
                   }}
                 >
-                  {(bulkActiveSub.ageDivisions || ['Over 17']).map(ac => (
+                  {(bulkActiveSub.ageDivisions || ['Senior']).map(ac => (
                     <option key={ac} value={ac}>{ac}</option>
                   ))}
                 </select>
@@ -788,7 +799,7 @@ function CompetitorList({
                     value={bulkWeightClass} 
                     onChange={e => setBulkWeightClass(e.target.value)}
                   >
-                    {(WEIGHT_CATEGORIES[bulkAgeCategory]?.[bulkGender] || WEIGHT_CATEGORIES['Over 17']?.[bulkGender] || []).map(wc => (
+                    {(WEIGHT_CATEGORIES[bulkAgeCategory]?.[bulkGender] || WEIGHT_CATEGORIES['Senior']?.[bulkGender] || []).map(wc => (
                       <option key={wc.value} value={wc.value}>{wc.label}</option>
                     ))}
                   </select>
@@ -830,7 +841,7 @@ function CompetitorList({
           />
         </div>
 
-        {/* Quick Filter Bar: Regular vs Freshers, Event Filter */}
+        {/* Quick Filter Bar: Regular vs Freshers, Event Filter (No Emojis) */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
           <div className="filter-pills-container">
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tier:</span>
@@ -846,69 +857,14 @@ function CompetitorList({
               className={`filter-pill ${filterTier === 'Regular' ? 'active-blue' : ''}`}
               onClick={() => setFilterTier('Regular')}
             >
-               Regular ({regularCount})
+              Regular ({regularCount})
             </button>
             <button 
               type="button" 
               className={`filter-pill ${filterTier === 'Freshers' ? 'active-green' : ''}`}
               onClick={() => setFilterTier('Freshers')}
             >
-               Freshers ({freshersCount})
-            </button>
-          </div>
-
-          <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border-color)' }} />
-
-          <div className="filter-pills-container">
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Event:</span>
-            <button 
-              type="button" 
-              className={`filter-pill ${filterEvent === 'all' ? 'active' : ''}`}
-              onClick={() => setFilterEvent('all')}
-            >
-              All Events
-            </button>
-            {EVENT_TYPES.map(ev => {
-              const count = competitors.filter(c => (c.event || 'Kyorugi') === ev).length;
-              if (count === 0 && filterEvent !== ev) return null;
-              return (
-                <button 
-                  key={ev}
-                  type="button" 
-                  className={`filter-pill ${filterEvent === ev ? 'active' : ''}`}
-                  onClick={() => setFilterEvent(ev)}
-                >
-                  {ev} ({count})
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Quick Filter Bar: Regular vs Freshers, Event Filter */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
-          <div className="filter-pills-container">
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tier:</span>
-            <button 
-              type="button" 
-              className={`filter-pill ${filterTier === 'all' ? 'active' : ''}`}
-              onClick={() => setFilterTier('all')}
-            >
-              All ({competitors.length})
-            </button>
-            <button 
-              type="button" 
-              className={`filter-pill ${filterTier === 'Regular' ? 'active-blue' : ''}`}
-              onClick={() => setFilterTier('Regular')}
-            >
-              ⭐ Regular ({regularCount})
-            </button>
-            <button 
-              type="button" 
-              className={`filter-pill ${filterTier === 'Freshers' ? 'active-green' : ''}`}
-              onClick={() => setFilterTier('Freshers')}
-            >
-              🌱 Freshers ({freshersCount})
+              Freshers ({freshersCount})
             </button>
           </div>
 
@@ -973,7 +929,7 @@ function CompetitorList({
                       <td>{comp.club || 'Independent'}</td>
                       <td>
                         <span className={`badge ${isFreshers ? 'badge-green' : 'badge-blue'}`}>
-                          {isFreshers ? '🌱 Freshers' : '⭐ Regular'}
+                          {isFreshers ? 'Freshers' : 'Regular'}
                         </span>
                       </td>
                       <td>

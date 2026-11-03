@@ -283,14 +283,14 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
               className={`filter-pill ${selectedTier === 'Regular' ? 'active-blue' : ''}`}
               onClick={() => setSelectedTier('Regular')}
             >
-              ⭐ Regular
+              Regular
             </button>
             <button 
               type="button" 
               className={`filter-pill ${selectedTier === 'Freshers' ? 'active-green' : ''}`}
               onClick={() => setSelectedTier('Freshers')}
             >
-              🌱 Freshers
+              Freshers
             </button>
           </div>
 
@@ -351,7 +351,7 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
                     style={{ fontWeight: '700', fontSize: '0.95rem', minWidth: '280px', width: 'auto' }}
                   >
                     {filteredDivisionStats.filter(d => d.categoryType === 'Freshers').length > 0 && (
-                      <optgroup label="🌱 Freshers Divisions">
+                      <optgroup label="Freshers Divisions">
                         {filteredDivisionStats.filter(d => d.categoryType === 'Freshers').map(div => (
                           <option key={div.id} value={div.id}>
                             {div.name} ({div.competitorsCount} players) — {div.courtNo !== 'Unassigned' ? ('Court ' + div.courtNo) : 'Unassigned'}
@@ -360,7 +360,7 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
                       </optgroup>
                     )}
                     {filteredDivisionStats.filter(d => (d.categoryType || 'Regular') === 'Regular').length > 0 && (
-                      <optgroup label="⭐ Regular Divisions">
+                      <optgroup label="Regular Divisions">
                         {filteredDivisionStats.filter(d => (d.categoryType || 'Regular') === 'Regular').map(div => (
                           <option key={div.id} value={div.id}>
                             {div.name} ({div.competitorsCount} players) — {div.courtNo !== 'Unassigned' ? ('Court ' + div.courtNo) : 'Unassigned'}
@@ -374,7 +374,7 @@ function ResultsView({ divisions = {}, brackets = {}, divisionCourts = {}, total
                 {selectedDivision && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                     <span className={`badge ${selectedDivision.categoryType === 'Freshers' ? 'badge-green' : 'badge-blue'}`}>
-                      {selectedDivision.categoryType === 'Freshers' ? '🌱 Freshers' : '⭐ Regular'}
+                      {selectedDivision.categoryType === 'Freshers' ? 'Freshers' : 'Regular'}
                     </span>
                     <span className="badge badge-purple">
                       {selectedDivision.event || 'Kyorugi'}
