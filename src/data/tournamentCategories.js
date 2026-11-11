@@ -239,6 +239,46 @@ export const WEIGHT_CATEGORIES = {
 };
 
 // Official Poomsae Regular Individual Divisions from regulation chart
+// Ready-to-Use JavaScript / JSON Array (for ID Card Generator & EvtMgr)
+export const POOMSAE_CATEGORIES = [
+  // Individual - Regular
+  { code: "PO-IND-REG-JUN1", name: "Recognised Individual (Junior I)", type: "INDIVIDUAL", tier: "REGULAR", ageRange: "Under 12 Yrs (Born 2014+)" },
+  { code: "PO-IND-REG-JUN2", name: "Recognised Individual (Junior II)", type: "INDIVIDUAL", tier: "REGULAR", ageRange: "Under 15 Yrs (2011–2013)" },
+  { code: "PO-IND-REG-JUN3", name: "Recognised Individual (Junior III)", type: "INDIVIDUAL", tier: "REGULAR", ageRange: "Under 18 Yrs (2008–2010)" },
+  { code: "PO-IND-REG-SEN1", name: "Recognised Individual (Senior I)", type: "INDIVIDUAL", tier: "REGULAR", ageRange: "Under 29 Yrs (1997–2007)" },
+  { code: "PO-IND-REG-SEN2", name: "Recognised Individual (Senior II)", type: "INDIVIDUAL", tier: "REGULAR", ageRange: "Under 39 Yrs (1987–1996)" },
+  { code: "PO-IND-REG-SEN3", name: "Recognised Individual (Senior III)", type: "INDIVIDUAL", tier: "REGULAR", ageRange: "Under 49 Yrs (1977–1986)" },
+  { code: "PO-IND-REG-SEN4", name: "Recognised Individual (Senior IV)", type: "INDIVIDUAL", tier: "REGULAR", ageRange: "Under 59 Yrs (1967–1976)" },
+  { code: "PO-IND-REG-MAS1", name: "Recognised Individual (Master I)", type: "INDIVIDUAL", tier: "REGULAR", ageRange: "Under 69 Yrs (1957–1966)" },
+  { code: "PO-IND-REG-MAS2", name: "Recognised Individual (Master II)", type: "INDIVIDUAL", tier: "REGULAR", ageRange: "Over 70 Yrs (Born <= 1956)" },
+  // Individual - Freshers
+  { code: "PO-IND-FR-CHILD", name: "Recognised Individual (Children)", type: "INDIVIDUAL", tier: "FRESHERS", ageRange: "Under 12 Yrs (Ages 5–11)" },
+  { code: "PO-IND-FR-SUBJUN", name: "Recognised Individual (Sub Junior)", type: "INDIVIDUAL", tier: "FRESHERS", ageRange: "Ages 10–11 (2013–2014)" },
+  { code: "PO-IND-FR-CADET", name: "Recognised Individual (Cadet)", type: "INDIVIDUAL", tier: "FRESHERS", ageRange: "Ages 12–14 (2010–2012)" },
+  // Pair - Regular
+  { code: "PO-PAIR-REG-CHILD", name: "Recognised Mix Pair (Children)", type: "PAIR", tier: "REGULAR", ageRange: "Under 12 Yrs (Born 2014+)" },
+  { code: "PO-PAIR-REG-SUBJUN", name: "Recognised Mix Pair (Sub Junior)", type: "PAIR", tier: "REGULAR", ageRange: "Ages 10–11 (2013–2014)" },
+  { code: "PO-PAIR-REG-CADET", name: "Recognised Mix Pair (Cadet)", type: "PAIR", tier: "REGULAR", ageRange: "Ages 12–14 (2010–2012)" },
+  { code: "PO-PAIR-REG-JUN", name: "Recognised Mix Pair (Junior)", type: "PAIR", tier: "REGULAR", ageRange: "Ages 15–17 (2007–2009)" },
+  { code: "PO-PAIR-REG-U30", name: "Recognised Mix Pair (Under 30 Yrs)", type: "PAIR", tier: "REGULAR", ageRange: "Ages 18–30 (1994–2006)" },
+  { code: "PO-PAIR-REG-A30", name: "Recognised Mix Pair (Above 30 Yrs)", type: "PAIR", tier: "REGULAR", ageRange: "31+ Yrs (Born <= 1993)" },
+  // Pair - Freshers
+  { code: "PO-PAIR-FR-CHILD", name: "Recognised Mix Pair (Children)", type: "PAIR", tier: "FRESHERS", ageRange: "Under 12 Yrs (Ages 5–11)" },
+  { code: "PO-PAIR-FR-SUBJUN", name: "Recognised Mix Pair (Sub Junior)", type: "PAIR", tier: "FRESHERS", ageRange: "Ages 10–11 (2013–2014)" },
+  { code: "PO-PAIR-FR-CADET", name: "Recognised Mix Pair (Cadet)", type: "PAIR", tier: "FRESHERS", ageRange: "Ages 12–14 (2010–2012)" },
+  // Team - Regular
+  { code: "PO-TEAM-REG-CHILD", name: "Recognised Team Male / Female (Children)", type: "TEAM", tier: "REGULAR", ageRange: "Under 12 Yrs (Born 2014+)" },
+  { code: "PO-TEAM-REG-SUBJUN", name: "Recognised Team Male / Female (Sub Junior)", type: "TEAM", tier: "REGULAR", ageRange: "Ages 10–11 (2013–2014)" },
+  { code: "PO-TEAM-REG-CADET", name: "Recognised Team Male / Female (Cadet)", type: "TEAM", tier: "REGULAR", ageRange: "Ages 12–14 (2010–2012)" },
+  { code: "PO-TEAM-REG-JUN", name: "Recognised Team Male / Female (Junior)", type: "TEAM", tier: "REGULAR", ageRange: "Ages 15–17 (2007–2009)" },
+  { code: "PO-TEAM-REG-U30", name: "Recognised Team Male / Female (Under 30 Yrs)", type: "TEAM", tier: "REGULAR", ageRange: "Ages 18–30 (1994–2006)" },
+  { code: "PO-TEAM-REG-A30", name: "Recognised Team Male / Female (Above 30 Yrs)", type: "TEAM", tier: "REGULAR", ageRange: "31+ Yrs (Born <= 1993)" },
+  // Team - Freshers
+  { code: "PO-TEAM-FR-CHILD", name: "Recognised Team Male / Female (Children)", type: "TEAM", tier: "FRESHERS", ageRange: "Under 12 Yrs (Ages 5–11)" },
+  { code: "PO-TEAM-FR-SUBJUN", name: "Recognised Team Male / Female (Sub Junior)", type: "TEAM", tier: "FRESHERS", ageRange: "Ages 10–11 (2013–2014)" },
+  { code: "PO-TEAM-FR-CADET", name: "Recognised Team Male / Female (Cadet)", type: "TEAM", tier: "FRESHERS", ageRange: "Ages 12–14 (2010–2012)" },
+];
+
 export const POOMSAE_REGULAR_INDIVIDUAL_DIVISIONS = [
   'Junior I (Under 12 Years)',
   'Junior II (Under 15 Years)',
@@ -327,7 +367,7 @@ export const TOURNAMENT_STRUCTURE = {
         {
           id: 'Recognised Mix Pair',
           name: 'Recognised Mix Pair',
-          ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Under 30 Yrs', 'Under 40 Yrs', 'Under 50 Yrs', 'Under 60 Yrs', 'Over 60 Yrs'],
+          ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Under 30 Yrs', 'Above 30 Yrs'],
           genders: ['Mix Pair'],
           hasWeights: false,
           defaultWeight: 'Mix Pair'
@@ -335,7 +375,7 @@ export const TOURNAMENT_STRUCTURE = {
         {
           id: 'Recognised Team',
           name: 'Recognised Team (3 athletes)',
-          ageDivisions: ['Cadet', 'Junior', 'Under 30 Yrs', 'Under 40 Yrs', 'Under 50 Yrs', 'Under 60 Yrs', 'Over 60 Yrs'],
+          ageDivisions: ['Children', 'Sub Junior', 'Cadet', 'Junior', 'Under 30 Yrs', 'Above 30 Yrs'],
           genders: ['Male Team', 'Female Team'],
           hasWeights: false,
           defaultWeight: 'Team of 3'
